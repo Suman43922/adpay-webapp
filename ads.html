@@ -190,7 +190,7 @@
         document.getElementById("totalRefs").innerText = referrals;
       }
 
-      document.getElementById("username").innerText = tgUser.username ? `@${tgUser.username}` : tgUser.first_name;
+      document.getElementById("username").innerText = "Username = " + (tgUser.username ? `@${tgUser.username}` : tgUser.first_name);
       document.getElementById("refLink").value = `https://t.me/AdsclicksBot?start=${userId}`;
       updateBalances();
     });
