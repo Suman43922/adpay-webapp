@@ -159,7 +159,6 @@
     appId: "1:45534721620:web:75757cda1537e3c7f35fc1"
   };
 
-  <script>
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
@@ -172,7 +171,6 @@
   const userRef = db.ref("users/" + userId);
 
   let captchaCode = "";
-  const rewardPerReferral = 2; // adjust as needed
 
   function generateCaptcha() {
     return Math.floor(100 + Math.random() * 900).toString();
@@ -180,45 +178,21 @@
 
   // Load user data
   userRef.once("value").then(snap => {
-    if (snap.exists()) {
-      const userData = snap.val();
-
-      // ✅ Check if blocked
-      if (userData.blocked === true) {
-        document.body.innerHTML = `
-          <h2 style="color:red;">🚫 Blocked</h2>
-          <p>You have been blocked by the admin.</p>
-        `;
-        return;
-      }
-
-      // Else, proceed normally (load data or update UI)
-      user = {
-        balance: userData.balance || 0,
-        adsWatched: userData.adsWatched || 0,
-        referrals: userData.referrals || 0,
-        referralEarning: userData.referralEarning || 0
-      };
-
-      updateBalances(); // if you have this function
-    } else {
-      // Create new user
+    if (!snap.exists()) {
       userRef.set({
         username: tgUser.username || tgUser.first_name,
         balance: 0,
         adsWatched: 0,
         referrals: 0,
         referralEarning: 0,
-        referredBy: referralId || null,
-        blocked: false
+        referredBy: referralId || null
       });
 
-      // Handle referral reward
       if (referralId) {
         const refRef = db.ref("users/" + referralId);
         refRef.once("value").then(refSnap => {
           if (refSnap.exists()) {
-            const refData = refSnap.val();
+            let refData = refSnap.val();
             refRef.update({
               referralEarning: (refData.referralEarning || 0) + rewardPerReferral,
               referrals: (refData.referrals || 0) + 1
@@ -226,9 +200,6 @@
           }
         });
       }
-    }
-  });
-</script>
     } else {
       let data = snap.val();
       user.balance = data.balance || 0;
@@ -366,4 +337,4 @@
   }
 </script>
 </body>
-    </html>
+</html>
