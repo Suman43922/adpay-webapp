@@ -48,42 +48,51 @@
 <button onclick="window.location.href='ads.html'">Dashboard</button>
 <body>
   <h2>👑 Admin Dashboard</h2>
-  <p id="accessStatus">Checking access...</p>  <div id="adminPanel" style="display: none;"><div class="card">
-  <h3>🧾 Balance Control</h3>
-  <input type="text" id="targetUser" placeholder="User ID" />
-  <input type="number" id="amount" placeholder="Amount" />
-  <select id="action">
-    <option value="add">Add</option>
-    <option value="remove">Remove</option>
-  </select>
-  <button onclick="modifyBalance()">🧮 Update Balance</button>
-  <p id="balMsg" class="success"></p>
-</div>
+  <p id="accessStatus">Checking access...</p>
+  <div id="adminPanel" style="display: none;">
+    
+    <div class="card">
+      <h3>🧾 Balance Control</h3>
+      <input type="text" id="targetUser" placeholder="User ID" />
+      <input type="number" id="amount" placeholder="Amount" />
+      <select id="action">
+        <option value="add">Add</option>
+        <option value="remove">Remove</option>
+      </select>
+      <button onclick="modifyBalance()">🧮 Update Balance</button>
+      <p id="balMsg" class="success"></p>
+    </div>
 
-<div class="card">
-  <h3>🔍 User Info</h3>
-  <input type="text" id="infoUser" placeholder="User ID to Fetch Info" />
-  <button onclick="getUserInfo()">📄 Get Info</button>
-  <p id="userInfo" style="font-size: 14px;"></p>
-  <button onclick="deleteUser()">🗑️ Delete User</button>
-  <button onclick="copyRef()">🔗 Copy Referral Link</button>
-  <p id="userActionMsg" class="success"></p>
-</div>
+    <div class="card">
+      <h3>🔍 User Info</h3>
+      <input type="text" id="infoUser" placeholder="User ID to Fetch Info" />
+      <button onclick="getUserInfo()">📄 Get Info</button>
+      <p id="userInfo" style="font-size: 14px; white-space: pre-line;"></p>
+      
+      <button onclick="deleteUser()">🗑️ Delete User</button>
+      <button onclick="restoreUser()">♻️ Restore User</button>
+      <button onclick="viewDeletedUsers()" style="margin-top:10px; background-color:#28a745;">
+        📋 View Deleted Users
+      </button>
 
-<div class="card">
-  <h3>👥 Total Users</h3>
-  <button onclick="getTotalUsers()">🔢 Count Users</button>
-  <p id="userCount"></p>
-</div>
+      <p id="userActionMsg" class="success"></p>
+    </div>
 
-<div class="card">
-  <h3>📥 Withdraw Requests</h3>
-  <button onclick="getWithdrawals()">📄 View Requests</button>
-  <div id="withdrawList" style="text-align: left;"></div>
-</div>
+    <div class="card">
+      <h3>👥 Total Users</h3>
+      <button onclick="getTotalUsers()">🔢 Count Users</button>
+      <p id="userCount"></p>
+    </div>
 
+    <div class="card">
+      <h3>📥 Withdraw Requests</h3>
+      <button onclick="getWithdrawals()">📄 View Requests</button>
+      <div id="withdrawList" style="text-align: left;"></div>
+    </div>
 
-  </div>  <script>
+  </div>
+
+  <script>
     const adminIds = [7313389640];
     const firebaseConfig = {
       apiKey: "AIzaSyCSm5ieUET95VXEA69JtViX9su5ClMUrCU",
@@ -112,9 +121,13 @@
     }
 
     function modifyBalance() {
-      const uid = document.getElementById("targetUser").value;
+      const uid = document.getElementById("targetUser").value.trim();
       const amt = parseFloat(document.getElementById("amount").value);
       const act = document.getElementById("action").value;
+      if (!uid || isNaN(amt)) {
+        document.getElementById("balMsg").innerText = "❌ Enter valid User ID and Amount";
+        return;
+      }
       const ref = db.ref("users/" + uid);
       ref.once("value").then(snap => {
         if (!snap.exists()) return document.getElementById("balMsg").innerText = "❌ User not found";
@@ -127,7 +140,11 @@
     }
 
     function getUserInfo() {
-      const uid = document.getElementById("infoUser").value;
+      const uid = document.getElementById("infoUser").value.trim();
+      if (!uid) {
+        document.getElementById("userInfo").innerText = "❌ Enter User ID";
+        return;
+      }
       const ref = db.ref("users/" + uid);
       ref.once("value").then(snap => {
         if (!snap.exists()) {
@@ -144,14 +161,75 @@
     }
 
     function deleteUser() {
-      const uid = document.getElementById("infoUser").value;
-      db.ref("users/" + uid).remove().then(() => {
-        document.getElementById("userActionMsg").innerText = "✅ User deleted!";
+      const uid = document.getElementById("infoUser").value.trim();
+      if (!uid) {
+        document.getElementById("userActionMsg").innerText = "❌ Enter User ID first";
+        return;
+      }
+      const userRef = db.ref("users/" + uid);
+
+      userRef.once("value").then(snap => {
+        if (!snap.exists()) {
+          document.getElementById("userActionMsg").innerText = "❌ User not found!";
+          return;
+        }
+        const userData = snap.val();
+
+        // Move to deletedUsers
+        db.ref("deletedUsers/" + uid).set(userData).then(() => {
+          userRef.remove().then(() => {
+            document.getElementById("userActionMsg").innerText = "✅ User archived (soft deleted)!";
+          });
+        });
+      });
+    }
+
+    function restoreUser() {
+      const uid = document.getElementById("infoUser").value.trim();
+      if (!uid) {
+        document.getElementById("userActionMsg").innerText = "❌ Enter User ID first";
+        return;
+      }
+      const deletedRef = db.ref("deletedUsers/" + uid);
+      const userRef = db.ref("users/" + uid);
+
+      deletedRef.once("value").then(snap => {
+        if (!snap.exists()) {
+          document.getElementById("userActionMsg").innerText = "❌ No archived user found!";
+          return;
+        }
+        const userData = snap.val();
+
+        userRef.set(userData).then(() => {
+          deletedRef.remove().then(() => {
+            document.getElementById("userActionMsg").innerText = "✅ User restored!";
+          });
+        });
+      });
+    }
+
+    function viewDeletedUsers() {
+      const deletedUsersRef = db.ref("deletedUsers");
+      deletedUsersRef.once("value").then(snapshot => {
+        if (!snapshot.exists()) {
+          alert("No deleted users found!");
+          return;
+        }
+        let users = "";
+        snapshot.forEach(child => {
+          const user = child.val();
+          users += `UserID: ${child.key}, Username: ${user.username || "N/A"}\n`;
+        });
+        alert("Deleted Users:\n" + users);
       });
     }
 
     function copyRef() {
-      const uid = document.getElementById("infoUser").value;
+      const uid = document.getElementById("infoUser").value.trim();
+      if (!uid) {
+        document.getElementById("userActionMsg").innerText = "❌ Enter User ID first";
+        return;
+      }
       const refLink = `https://t.me/AdsclicksBot?start=${uid}`;
       navigator.clipboard.writeText(refLink).then(() => {
         document.getElementById("userActionMsg").innerText = "✅ Referral link copied!";
@@ -163,7 +241,6 @@
         document.getElementById("userCount").innerText = `Total Users: ${snap.numChildren()}`;
       });
     }
-
   </script>
 </body>
 </html>
