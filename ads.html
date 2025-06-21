@@ -159,6 +159,7 @@
     appId: "1:45534721620:web:75757cda1537e3c7f35fc1"
   };
 
+  <script>
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
@@ -225,6 +226,9 @@
           }
         });
       }
+    }
+  });
+</script>
     } else {
       let data = snap.val();
       user.balance = data.balance || 0;
@@ -362,4 +366,4 @@
   }
 </script>
 </body>
-</html>
+    </html>
