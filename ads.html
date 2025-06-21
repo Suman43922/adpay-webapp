@@ -124,10 +124,10 @@
         document.getElementById("username").innerText = displayName;
 
         const id = userData.id;
-        const link = `https://t.me/AdsclicksBot?start=${id}`;
-        document.getElementById("refLink").value = link;
-      }
-
+        const botUsername = "AdpayrewardsBot";
+  const link = `https://t.me/${botUsername}?start=${id}`;
+  document.getElementById("refLink").value = link;
+}
       function updateBalances() {
         const totalBalance = user.balance + refEarn;
         document.getElementById("balance").innerText = `Rs. ${user.balance.toFixed(2)}`;
