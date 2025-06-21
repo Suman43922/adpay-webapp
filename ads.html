@@ -96,7 +96,7 @@
 
   <h2>📺 Watch Ads</h2>
   <div class="card">
-    <p><b>👷 Username = </b> <span id="username">Loading...</span></p>
+    <p><b>Username:</b> <span id="username">Loading...</span></p>
     <p>💰 Ads Balance = <b id="balance">Rs. 0.00</b></p>
     <p><span id="counter">📛 Daily Limit = 0</span>/100</p>
     <button id="watchBtn" onclick="showCaptcha()">▶️ Watch Ad</button>
@@ -171,6 +171,7 @@
   const userRef = db.ref("users/" + userId);
 
   let captchaCode = "";
+  const rewardPerReferral = 2; // adjust as needed
 
   function generateCaptcha() {
     return Math.floor(100 + Math.random() * 900).toString();
@@ -178,21 +179,45 @@
 
   // Load user data
   userRef.once("value").then(snap => {
-    if (!snap.exists()) {
+    if (snap.exists()) {
+      const userData = snap.val();
+
+      // ✅ Check if blocked
+      if (userData.blocked === true) {
+        document.body.innerHTML = `
+          <h2 style="color:red;">🚫 Blocked</h2>
+          <p>You have been blocked by the admin.</p>
+        `;
+        return;
+      }
+
+      // Else, proceed normally (load data or update UI)
+      user = {
+        balance: userData.balance || 0,
+        adsWatched: userData.adsWatched || 0,
+        referrals: userData.referrals || 0,
+        referralEarning: userData.referralEarning || 0
+      };
+
+      updateBalances(); // if you have this function
+    } else {
+      // Create new user
       userRef.set({
         username: tgUser.username || tgUser.first_name,
         balance: 0,
         adsWatched: 0,
         referrals: 0,
         referralEarning: 0,
-        referredBy: referralId || null
+        referredBy: referralId || null,
+        blocked: false
       });
 
+      // Handle referral reward
       if (referralId) {
         const refRef = db.ref("users/" + referralId);
         refRef.once("value").then(refSnap => {
           if (refSnap.exists()) {
-            let refData = refSnap.val();
+            const refData = refSnap.val();
             refRef.update({
               referralEarning: (refData.referralEarning || 0) + rewardPerReferral,
               referrals: (refData.referrals || 0) + 1
