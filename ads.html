@@ -41,7 +41,6 @@
       color: white;
       border: 1px solid #555;
     }
-    /* Captcha popup styles */
     #captchaBox {
       position: fixed;
       top: 50%; left: 50%;
@@ -66,11 +65,6 @@
     #error {
       margin-top: 10px;
       color: #e74c3c;
-    }
-    #copyMsg {
-      margin-top: 5px;
-      color: lightgreen;
-      font-weight: bold;
     }
   </style>
 </head>
@@ -99,7 +93,7 @@
     <p>🔗 Referral Link</p>
     <input type="text" id="refLink" readonly onclick="copyReferral()" />
     <button onclick="copyReferral()">📋 Copy Referral Link</button>
-    <p id="copyMsg"></p>
+    <p id="copyMsg" style="color: lightgreen;"></p>
   </div>
 
   <h3>💵 Withdraw Money</h3>
@@ -129,6 +123,13 @@
   </div>
 
 <script>
+  const rewardPerView = 0.2;
+  const rewardPerReferral = 0.5;
+  const maxViews = 100;
+
+  let views = 0, referrals = 0, refEarn = 0;
+  let user = { balance: 0 };
+
   // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyCSm5ieUET95VXEA69JtViX9su5ClMUrCU",
@@ -148,179 +149,167 @@
 
   const tgUser = Telegram.WebApp.initDataUnsafe.user;
   const referralId = Telegram.WebApp.initDataUnsafe.start_param;
-  const userId = tgUser ? tgUser.id : null;
 
   if (!tgUser) {
-    alert("Please open this inside Telegram.");
-  }
+    alert("Please open this WebApp inside Telegram!");
+  } else {
+    const userId = tgUser.id;
+    const userRef = db.ref("users/" + userId);
 
-  const rewardPerView = 0.2;
-  const rewardPerReferral = 0.5;
-  const maxViews = 100;
-
-  let views = 0, referrals = 0, refEarn = 0;
-  let user = { balance: 0 };
-
-  const userRef = db.ref("users/" + userId);
-
-  // Load user or create
-  userRef.once("value").then(snap => {
-    if (!snap.exists()) {
-      userRef.set({
-        username: tgUser.username || tgUser.first_name,
-        balance: 0,
-        adsWatched: 0,
-        referrals: 0,
-        referralEarning: 0,
-        referredBy: referralId || null
-      });
-
-      // Update referral data if exists
-      if (referralId) {
-        const refRef = db.ref("users/" + referralId);
-        refRef.once("value").then(refSnap => {
-          if (refSnap.exists()) {
-            let refData = refSnap.val();
-            refRef.update({
-              referralEarning: (refData.referralEarning || 0) + rewardPerReferral,
-              referrals: (refData.referrals || 0) + 1
-            });
-          }
+    // Load user data or create new user
+    userRef.once("value").then(snap => {
+      if (!snap.exists()) {
+        userRef.set({
+          username: tgUser.username || tgUser.first_name,
+          balance: 0,
+          adsWatched: 0,
+          referrals: 0,
+          referralEarning: 0,
+          referredBy: referralId || null
         });
+
+        if (referralId) {
+          const refRef = db.ref("users/" + referralId);
+          refRef.once("value").then(refSnap => {
+            if (refSnap.exists()) {
+              let refData = refSnap.val();
+              refRef.update({
+                referralEarning: (refData.referralEarning || 0) + rewardPerReferral,
+                referrals: (refData.referrals || 0) + 1
+              });
+            }
+          });
+        }
+      } else {
+        let data = snap.val();
+        user.balance = data.balance || 0;
+        views = data.adsWatched || 0;
+        refEarn = data.referralEarning || 0;
+        referrals = data.referrals || 0;
+        document.getElementById("counter").innerText = `📛 Daily Limit = ${views}`;
+        document.getElementById("totalRefs").innerText = referrals;
       }
-    } else {
-      let data = snap.val();
-      user.balance = data.balance || 0;
-      views = data.adsWatched || 0;
-      refEarn = data.referralEarning || 0;
-      referrals = data.referrals || 0;
-      document.getElementById("counter").innerText = `📛 Daily Limit = ${views}`;
-      document.getElementById("totalRefs").innerText = referrals;
+
+      document.getElementById("username").innerText = tgUser.username ? `@${tgUser.username}` : tgUser.first_name;
+      document.getElementById("refLink").value = `https://t.me/AdsclicksBot?start=${userId}`;
+      updateBalances();
+    });
+
+    function updateBalances() {
+      const total = user.balance + refEarn;
+      document.getElementById("balance").innerText = `Rs. ${user.balance.toFixed(2)}`;
+      document.getElementById("refEarnings").innerText = `Rs. ${refEarn.toFixed(2)}`;
+      document.getElementById("withdrawBalance").innerText = `Rs. ${total.toFixed(2)}`;
     }
 
-    document.getElementById("username").innerText = tgUser.username ? `@${tgUser.username}` : tgUser.first_name;
-    document.getElementById("refLink").value = `https://t.me/AdsclicksBot?start=${userId}`;
-    updateBalances();
-  });
+    // CAPTCHA logic
+    let captchaCode = "";
 
-  function updateBalances() {
-    const total = user.balance + refEarn;
-    document.getElementById("balance").innerText = `Rs. ${user.balance.toFixed(2)}`;
-    document.getElementById("refEarnings").innerText = `Rs. ${refEarn.toFixed(2)}`;
-    document.getElementById("withdrawBalance").innerText = `Rs. ${total.toFixed(2)}`;
-  }
+    function generateCaptcha() {
+      return Math.floor(100 + Math.random() * 900).toString();
+    }
 
-  // Captcha logic
-  let captchaCode = "";
+    function showCaptcha() {
+      captchaCode = generateCaptcha();
+      const questionEl = document.getElementById("question");
+      questionEl.innerText = `👉 Tap here & Enter this code: ${captchaCode}`;
+      document.getElementById("inputBox").style.display = "none";
+      document.getElementById("error").innerText = "";
+      document.getElementById("answer").value = "";
+      document.getElementById("captchaBox").style.display = "block";
+    }
 
-  function generateCaptcha() {
-    return Math.floor(100 + Math.random() * 900).toString();
-  }
+    function showInputBox() {
+      document.getElementById("inputBox").style.display = "block";
+    }
 
-  function showCaptcha() {
-    captchaCode = generateCaptcha();
-    const questionEl = document.getElementById("question");
-    questionEl.innerText = `👉 Tap here & Enter this code: ${captchaCode}`;
-    document.getElementById("inputBox").style.display = "none";
-    document.getElementById("error").innerText = "";
-    document.getElementById("answer").value = "";
-    document.getElementById("captchaBox").style.display = "block";
-  }
+    function verifyCaptcha() {
+      const userInput = document.getElementById("answer").value;
+      if (userInput === captchaCode) {
+        document.getElementById("captchaBox").style.display = "none";
+        window.open("https://go.monetag.com/abc123", "_blank");
 
-  function showInputBox() {
-    document.getElementById("inputBox").style.display = "block";
-  }
+        if (views >= maxViews) {
+          alert("Daily limit reached!");
+          return;
+        }
+        views++;
+        user.balance += rewardPerView;
 
-  function verifyCaptcha() {
-    const userInput = document.getElementById("answer").value;
-    if (userInput === captchaCode) {
-      document.getElementById("captchaBox").style.display = "none";
+        userRef.update({
+          balance: user.balance,
+          adsWatched: views
+        });
 
-      if (views >= maxViews) {
-        alert("Daily limit reached!");
+        updateBalances();
+        Telegram.WebApp.sendData("ad_done");
+        document.getElementById("counter").innerText = `📛 Daily Limit = ${views}`;
+      } else {
+        document.getElementById("error").innerText = "❌ Incorrect code. Try again.";
+      }
+    }
+
+    function withdraw() {
+      const method = document.getElementById("method").value;
+      const wallet = document.getElementById("wallet").value;
+      const amount = parseFloat(document.getElementById("amount").value);
+      const totalBalance = user.balance + refEarn;
+
+      if (wallet.length < 10) {
+        document.getElementById("withdrawStatus").innerText = "❌ Invalid wallet number!";
+        return;
+      }
+      if (amount < 30 || amount > totalBalance) {
+        document.getElementById("withdrawStatus").innerText = "❌ Invalid amount!";
         return;
       }
 
-      // Open monetag link in new tab
-      window.open("https://go.monetag.com/abc123", "_blank");
-
-      views++;
-      user.balance += rewardPerView;
-
-      userRef.update({
-        balance: user.balance,
-        adsWatched: views
-      });
+      if (user.balance >= amount) {
+        user.balance -= amount;
+      } else {
+        const diff = amount - user.balance;
+        user.balance = 0;
+        refEarn -= diff;
+      }
 
       updateBalances();
-      Telegram.WebApp.sendData("ad_done");
-      document.getElementById("counter").innerText = `📛 Daily Limit = ${views}`;
-    } else {
-      document.getElementById("error").innerText = "❌ Incorrect code. Try again.";
-    }
-  }
-
-  function withdraw() {
-    const method = document.getElementById("method").value;
-    const wallet = document.getElementById("wallet").value;
-    const amount = parseFloat(document.getElementById("amount").value);
-    const totalBalance = user.balance + refEarn;
-
-    if (wallet.length < 10) {
-      document.getElementById("withdrawStatus").innerText = "❌ Invalid wallet number!";
-      return;
-    }
-    if (amount < 30 || amount > totalBalance) {
-      document.getElementById("withdrawStatus").innerText = "❌ Invalid amount!";
-      return;
+      document.getElementById("withdrawStatus").innerText = `✅ Rs. ${amount} sent to ${wallet}`;
+      Telegram.WebApp.sendData(`withdraw|${method}|${wallet}|${amount}`);
     }
 
-    if (user.balance >= amount) {
-      user.balance -= amount;
-    } else {
-      const diff = amount - user.balance;
-      user.balance = 0;
-      refEarn -= diff;
+    function copyReferral() {
+      const copyText = document.getElementById("refLink");
+      copyText.select();
+      copyText.setSelectionRange(0, 99999);
+      document.execCommand("copy");
+      document.getElementById("copyMsg").innerText = "✅ Copied!";
+      setTimeout(() => {
+        document.getElementById("copyMsg").innerText = "";
+      }, 1500);
     }
 
-    updateBalances();
-    document.getElementById("withdrawStatus").innerText = `✅ Rs. ${amount} sent to ${wallet}`;
-    Telegram.WebApp.sendData(`withdraw|${method}|${wallet}|${amount}`);
-  }
-
-  function copyReferral() {
-    const copyText = document.getElementById("refLink");
-    copyText.select();
-    copyText.setSelectionRange(0, 99999);
-    document.execCommand("copy");
-    document.getElementById("copyMsg").innerText = "✅ Copied!";
-    setTimeout(() => {
-      document.getElementById("copyMsg").innerText = "";
-    }, 1500);
-  }
-
-  // Admin panel button
-  const adminId = 7313389640;
-  if (tgUser && tgUser.id === adminId) {
-    const adminBtn = document.createElement("button");
-    adminBtn.innerText = "👑 Admin Panel";
-    adminBtn.style = `
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      padding: 12px 20px;
-      background: #ff1493;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-      z-index: 9999;
-      cursor: pointer;
-    `;
-    adminBtn.onclick = () => {
-      window.location.href = "admin.html";
-    };
-    document.body.appendChild(adminBtn);
+    // Admin Panel Button
+    const adminId = 7313389640;
+    if (tgUser && tgUser.id === adminId) {
+      const adminBtn = document.createElement("button");
+      adminBtn.innerText = "👑 Admin Panel";
+      adminBtn.style = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        background: #ff1493;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        z-index: 9999;
+      `;
+      adminBtn.onclick = () => {
+        window.location.href = "admin.html"; 
+      };
+      document.body.appendChild(adminBtn);
+    }
   }
 </script>
 </body>
