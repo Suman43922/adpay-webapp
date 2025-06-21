@@ -89,7 +89,7 @@
     db.ref("withdrawRequests").orderByChild("userId").equalTo(userId).once("value", snapshot => {
       historyBody.innerHTML = "";
       if (!snapshot.exists()) {
-        historyBody.innerHTML = `<tr><td colspan="5">😐 No history found</td></tr>`;
+        historyBody.innerHTML = `<tr><td colspan="5">❌ No history found</td></tr>`;
         return;
       }
 
