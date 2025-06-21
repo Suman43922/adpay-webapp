@@ -1,74 +1,116 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Watch & Earn</title>
+  <title>Withdraw History</title>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: #f2f2f2;
-      padding: 30px;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #121212;
+      color: white;
+      padding: 20px;
     }
     h2 {
-      color: #333;
+      text-align: center;
     }
-    button {
-      font-size: 18px;
-      padding: 10px 20px;
+    table {
+      width: 100%;
       margin-top: 20px;
-      border: none;
-      background: #4CAF50;
-      color: white;
-      border-radius: 8px;
+      border-collapse: collapse;
     }
-    #captchaBox {
-      margin-top: 20px;
-      display: none;
-    }
-    input {
-      font-size: 16px;
+    th, td {
       padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #aaa;
+      text-align: center;
+      border: 1px solid #555;
+    }
+    th {
+      background-color: #1f1f1f;
+    }
+    tr:nth-child(even) {
+      background-color: #1a1a1a;
+    }
+    .status-pending {
+      color: orange;
+    }
+    .status-completed {
+      color: lightgreen;
+    }
+    .status-cancelled {
+      color: red;
     }
   </style>
 </head>
 <body>
-  <h2>🎬 Watch Ad & Earn</h2>
-  <p>Click the button below to start</p>
-  <button onclick="showCaptcha()">🎥 Watch Ad</button>
-
-  <div id="captchaBox">
-    <p id="question"></p>
-    <input type="text" id="answer" placeholder="Enter 3-digit code" maxlength="3" />
-    <br><br>
-    <button onclick="verifyCaptcha()">✅ Submit</button>
-    <p id="error" style="color:red;"></p>
-  </div>
-
+  <h2>📜 Your Withdraw History</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Method</th>
+        <th>Wallet</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Time</th>
+      </tr>
+    </thead>
+    <tbody id="historyBody">
+      <tr><td colspan="5">⏳ Loading...</td></tr>
+    </tbody>
+  </table>
+<button onclick="window.location.href='ads.html'" 
+        style="display: block; margin: 20px auto; padding: 10px 20px; background-color: #007bff; color: white; border:none; border-radius: 5px; cursor:pointer; width: 150px;">
+  🔙 Back
+</button>
   <script>
-    let code = "";
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCSm5ieUET95VXEA69JtViX9su5ClMUrCU",
+      authDomain: "adpayrewards-5d60d.firebaseapp.com",
+      databaseURL: "https://adpayrewards-5d60d-default-rtdb.firebaseio.com",
+      projectId: "adpayrewards-5d60d",
+      storageBucket: "adpayrewards-5d60d.appspot.com",
+      messagingSenderId: "45534721620",
+      appId: "1:45534721620:web:75757cda1537e3c7f35fc1"
+    };
 
-    function showCaptcha() {
-      document.getElementById('captchaBox').style.display = "block";
-      code = Math.floor(100 + Math.random() * 900).toString(); // random 3 digit
-      document.getElementById("question").innerText = `Enter this code to continue: ${code}`;
-      document.getElementById("error").innerText = "";
-      document.getElementById("answer").value = "";
-    }
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    function verifyCaptcha() {
-      const userInput = document.getElementById("answer").value;
-      if (userInput === code) {
-        // ✅ Replace with your actual Monetag link below:
-        window.open("https://go.monetag.com/abc123", "_blank");
-        document.getElementById('captchaBox').style.display = "none";
-      } else {
-        document.getElementById("error").innerText = "❌ Incorrect code. Try again.";
+    Telegram.WebApp.ready();
+    Telegram.WebApp.expand();
+
+    const tgUser = Telegram.WebApp.initDataUnsafe.user;
+    const userId = tgUser.id;
+    const historyBody = document.getElementById("historyBody");
+
+    db.ref("withdrawRequests").orderByChild("userId").equalTo(userId).once("value", snapshot => {
+      historyBody.innerHTML = "";
+      if (!snapshot.exists()) {
+        historyBody.innerHTML = `<tr><td colspan="5">😐 No history found</td></tr>`;
+        return;
       }
-    }
+
+      snapshot.forEach(child => {
+        const data = child.val();
+        const tr = document.createElement("tr");
+
+        let statusClass = "status-pending";
+        if (data.status === "completed") statusClass = "status-completed";
+        else if (data.status === "cancelled") statusClass = "status-cancelled";
+
+        tr.innerHTML = `
+          <td>${data.method}</td>
+          <td>${data.wallet}</td>
+          <td>Rs. ${data.amount.toFixed(2)}</td>
+          <td class="${statusClass}">${data.status}</td>
+          <td>${new Date(data.timestamp).toLocaleString()}</td>
+        `;
+        historyBody.appendChild(tr);
+      });
+    });
   </script>
 </body>
 </html>
