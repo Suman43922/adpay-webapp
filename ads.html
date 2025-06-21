@@ -250,32 +250,45 @@
     }
 
     function withdraw() {
-      const method = document.getElementById("method").value;
-      const wallet = document.getElementById("wallet").value;
-      const amount = parseFloat(document.getElementById("amount").value);
-      const totalBalance = user.balance + refEarn;
+  const method = document.getElementById("method").value;
+  const wallet = document.getElementById("wallet").value;
+  const amount = parseFloat(document.getElementById("amount").value);
+  const totalBalance = user.balance + refEarn;
 
-      if (wallet.length < 10) {
-        document.getElementById("withdrawStatus").innerText = "❌ Invalid wallet number!";
-        return;
-      }
-      if (amount < 30 || amount > totalBalance) {
-        document.getElementById("withdrawStatus").innerText = "❌ Invalid amount!";
-        return;
-      }
+  if (wallet.length < 10) {
+    document.getElementById("withdrawStatus").innerText = "❌ Invalid wallet number!";
+    return;
+  }
+  if (amount < 30 || amount > totalBalance) {
+    document.getElementById("withdrawStatus").innerText = "❌ Invalid amount!";
+    return;
+  }
 
-      if (user.balance >= amount) {
-        user.balance -= amount;
-      } else {
-        const diff = amount - user.balance;
-        user.balance = 0;
-        refEarn -= diff;
-      }
+  // Deduct balance
+  if (user.balance >= amount) {
+    user.balance -= amount;
+  } else {
+    const diff = amount - user.balance;
+    user.balance = 0;
+    refEarn -= diff;
+  }
 
-      updateBalances();
-      document.getElementById("withdrawStatus").innerText = `✅ Rs. ${amount} sent to ${wallet}`;
-      Telegram.WebApp.sendData(`withdraw|${method}|${wallet}|${amount}`);
-    }
+  updateBalances();
+  document.getElementById("withdrawStatus").innerText = `✅ Rs. ${amount} requested to ${wallet}`;
+
+  // 1. Save request to Firebase
+  const withdrawRef = db.ref("withdrawRequests").push();
+  withdrawRef.set({
+    userId: userId,
+    username: tgUser.username || tgUser.first_name,
+    method: method,
+    wallet: wallet,
+    amount: amount,
+    status: "pending",
+    timestamp: Date.now()
+  });
+  Telegram.WebApp.sendData(`withdraw|${method}|${wallet}|${amount}`);
+}
 
     function copyReferral() {
       const copyText = document.getElementById("refLink");
