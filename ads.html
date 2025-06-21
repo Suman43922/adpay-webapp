@@ -1,229 +1,230 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>AdPay WebApp</title>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-      body {
-        font-family: 'Segoe UI', sans-serif;
-        background: linear-gradient(to bottom right, #800080, #8A2BE2, #ff00be);
-        color: white;
-        text-align: center;
-        padding: 20px;
-      }
-      .card {
-        background-color: #1c1c1e;
-        padding: 20px;
-        border-radius: 15px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        margin-bottom: 20px;
-      }
-      button {
-        background-color: #007bff;
-        border: none;
-        color: white;
-        padding: 12px 24px;
-        border-radius: 8px;
-        font-size: 16px;
-        margin-top: 10px;
-        cursor: pointer;
-      }
-      button:disabled {
-        background-color: #555;
-        cursor: not-allowed;
-      }
-      .small-text {
-        font-size: 13px;
-        opacity: 0.7;
-      }
-      #referralCard {
-        word-wrap: break-word;
-      }
-      input, select {
-        width: 90%;
-        padding: 10px;
-        border-radius: 5px;
-        margin-top: 10px;
-        background-color: #2a2a2a;
-        color: white;
-        border: 1px solid #555;
-      }
-    </style>
-  </head>
-  <body>
-    <h2>🎁 Invite And Earn!</h2>
-    <div class="card">
-      <p>1️⃣ Share your referral link</p>
-      <p>2️⃣ Friends join through your link</p>
-      <p>3️⃣ They watch their first ad</p>
-      <p>4️⃣ You earn <b>Rs. 0.50</b>!</p>
-    </div>
+<head>
+  <title>AdPay WebApp</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom right, #800080, #8A2BE2, #ff00be);
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    .card {
+      background-color: #1c1c1e;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      margin-bottom: 20px;
+    }
+    button {
+      background-color: #007bff;
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    input, select {
+      width: 90%;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+      background-color: #2a2a2a;
+      color: white;
+      border: 1px solid #555;
+    }
+  </style>
+</head>
+<body>
+  <h2>🎁 Invite And Earn!</h2>
+  <div class="card">
+    <p>1️⃣ Share your referral link</p>
+    <p>2️⃣ Friends join through your link</p>
+    <p>3️⃣ They watch their first ad</p>
+    <p>4️⃣ You earn <b>Rs. 0.50</b>!</p>
+  </div>
 
-    <h2>📺 Watch Ads</h2>
-    <div class="card">
-      <p>👤 Username = <b id="username">Loading...</b></p>
-      <p>💰 Ads Balance = <b id="balance">Rs. 0.00</b></p>
-      <p><span id="counter">📛 Daily Limit = 0</span>/100</p>
-      <button id="watchBtn" onclick="startAd()">▶️ Watch Ad</button>
-      <p class="small-text">I am human, ready to watch 😎</p>
-    </div>
+  <h2>📺 Watch Ads</h2>
+  <div class="card">
+    <p>👤 <b id="username">Username = Loading...</b></p>
+    <p>💰 Ads Balance = <b id="balance">Rs. 0.00</b></p>
+    <p><span id="counter">📛 Daily Limit = 0</span>/100</p>
+    <button id="watchBtn" onclick="startAd()">▶️ Watch Ad</button>
+  </div>
 
-    <h3>🙌 Referral System</h3>
-    <div class="card" id="referralCard">
-      <p>👥 Total Referrals = <b id="totalRefs">0</b></p>
-      <p>💸 Refer Balance = <b id="refEarnings">Rs. 0.00</b></p>
-      <p>🔗 Referral Link👇👇</p>
-      <input
-        type="text"
-        id="refLink"
-        readonly
-        onclick="copyReferral()"
-        style="cursor: pointer;"
-      />
-      <button onclick="copyReferral()">📋 Copy Referral Link</button>
-      <p id="copyMsg" style="color: lightgreen;"></p>
-    </div>
+  <h3>🙌 Referral System</h3>
+  <div class="card">
+    <p>👥 Total Referrals = <b id="totalRefs">0</b></p>
+    <p>💸 Referral Balance = <b id="refEarnings">Rs. 0.00</b></p>
+    <p>🔗 Referral Link</p>
+    <input type="text" id="refLink" readonly onclick="copyReferral()" />
+    <button onclick="copyReferral()">📋 Copy Referral Link</button>
+    <p id="copyMsg" style="color: lightgreen;"></p>
+  </div>
 
-    <h3>💵 Withdraw Money</h3>
-    <div class="card">
-      <p><b>💰 Total Balance =</b> <span id="withdrawBalance">Rs. 0.00</span></p>
+  <h3>💵 Withdraw Money</h3>
+  <div class="card">
+    <p><b>💰 Total Balance =</b> <span id="withdrawBalance">Rs. 0.00</span></p>
+    <p><b>🏦 Select Payment Method</b></p>
+    <select id="method">
+      <option value="esewa">eSewa</option>
+      <option value="imepay">IME Pay</option>
+      <option value="khalti">Khalti</option>
+    </select>
+    <input type="text" id="wallet" placeholder="Enter phone number"/>
+    <input type="number" id="amount" placeholder="Enter amount to withdraw"/>
+    <button onclick="withdraw()">💵 Request Withdraw</button>
+    <p id="withdrawStatus" style="color: lightgreen;"></p>
+  </div>
 
-      <p><b>🏦 Select Payment Method</b></p>
-      <select id="method">
-        <option value="esewa">eSewa</option>
-        <option value="imepay">IME Pay</option>
-        <option value="khalti">Khalti</option>
-      </select>
+  <script>
+    const rewardPerView = 0.2;
+    const rewardPerReferral = 0.5;
+    const maxViews = 100;
 
-      <input type="text" id="wallet" placeholder="Enter phone number"/>
-      <input type="number" id="amount" placeholder="Enter amount to withdraw"/>
-      <button onclick="withdraw()">💵 Request Withdraw</button>
-      <p id="withdrawStatus" style="color: lightgreen;"></p>
-    </div>
+    let views = 0, referrals = 0, refEarn = 0;
+    let user = { balance: 0 };
 
-    <script>
-      let balance = 0;
-      let views = 0;
-      let referrals = 0;
-      let refEarn = 0;
-      const rewardPerView = 0.2;
-      const rewardPerReferral = 0.5;
-      const maxViews = 100;
+    const firebaseConfig = {
+      apiKey: "AIzaSyCSm5ieUET95VXEA69JtViX9su5ClMUrCU",
+      authDomain: "adpayrewards-5d60d.firebaseapp.com",
+      databaseURL: "https://adpayrewards-5d60d-default-rtdb.firebaseio.com",
+      projectId: "adpayrewards-5d60d",
+      storageBucket: "adpayrewards-5d60d.firebasestorage.app",
+      messagingSenderId: "45534721620",
+      appId: "1:45534721620:web:75757cda1537e3c7f35fc1"
+    };
 
-      let user = { balance: 0 };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-      Telegram.WebApp.ready();
-      Telegram.WebApp.expand();
-      const initDataUnsafe = Telegram.WebApp.initDataUnsafe;
+    Telegram.WebApp.ready();
+    Telegram.WebApp.expand();
 
-      if (initDataUnsafe && initDataUnsafe.user && initDataUnsafe.user.first_name) {
-        const userData = initDataUnsafe.user;
-        const displayName = userData.username ? `@${userData.username}` : userData.first_name;
-        document.getElementById("username").innerText = displayName;
+    const tgUser = Telegram.WebApp.initDataUnsafe.user;
+    const referralId = Telegram.WebApp.initDataUnsafe.start_param;
+    const userId = tgUser.id;
+    const userRef = db.ref("users/" + userId);
 
-        const id = userData.id;
-        const botUsername = "AdpayrewardsBot";
-  const link = `https://t.me/${botUsername}?start=${id}`;
-  document.getElementById("refLink").value = link;
-}
-      function updateBalances() {
-        const totalBalance = user.balance + refEarn;
-        document.getElementById("balance").innerText = `Rs. ${user.balance.toFixed(2)}`;
-        document.getElementById("refEarnings").innerText = `Rs. ${refEarn.toFixed(2)}`;
-        document.getElementById("withdrawBalance").innerText = `Rs. ${totalBalance.toFixed(2)}`;
-      }
+    userRef.once("value").then(snap => {
+      if (!snap.exists()) {
+        userRef.set({
+          username: tgUser.username || tgUser.first_name,
+          balance: 0,
+          adsWatched: 0,
+          referrals: 0,
+          referralEarning: 0,
+          referredBy: referralId || null
+        });
 
-      function startAd() {
-        if (views >= maxViews) {
-          alert("You have reached the maximum ad views.");
-          return;
+        if (referralId) {
+          const refRef = db.ref("users/" + referralId);
+          refRef.once("value").then(refSnap => {
+            if (refSnap.exists()) {
+              let refData = refSnap.val();
+              refRef.update({
+                referralEarning: (refData.referralEarning || 0) + rewardPerReferral,
+                referrals: (refData.referrals || 0) + 1
+              });
+            }
+          });
         }
-
-        const adWindow = window.open("adsearn.html", "_blank");
-
-        document.getElementById("watchBtn").disabled = true;
-        document.getElementById("watchBtn").innerText = "⏳ Waiting...";
-
-        setTimeout(() => {
-          views++;
-          user.balance += rewardPerView;
-
-          document.getElementById("counter").innerText = `📛 Daily Limit = ${views}`;
-          Telegram.WebApp.sendData("ad_done");
-
-          updateBalances();
-
-          document.getElementById("watchBtn").disabled = false;
-          document.getElementById("watchBtn").innerText = "▶️ Watch Ad";
-        }, 20000);
-      }
-
-      function copyReferral() {
-        const copyText = document.getElementById("refLink");
-        copyText.select();
-        copyText.setSelectionRange(0, 99999);
-        const success = document.execCommand("copy");
-        if (success) {
-          document.getElementById("copyMsg").innerText = "✅ Copied!";
-          setTimeout(() => {
-            document.getElementById("copyMsg").innerText = "";
-          }, 2000);
-        } else {
-          alert("❌ Copy failed");
-        }
-      }
-
-      function withdraw() {
-        let method = document.getElementById("method").value;
-        let wallet = document.getElementById("wallet").value;
-        let amount = parseFloat(document.getElementById("amount").value);
-        const minWithdraw = 30;
-
-        const totalBalance = user.balance + refEarn;
-
-        if (!wallet || wallet.length < 10) {
-          document.getElementById("withdrawStatus").innerText = "❌ Please enter a valid 10-digit wallet number!";
-          return;
-        }
-        if (!amount || amount <= 0) {
-          document.getElementById("withdrawStatus").innerText = "❌ Please enter a valid amount!";
-          return;
-        }
-        if (totalBalance < amount) {
-          document.getElementById("withdrawStatus").innerText = "❌ Insufficient points!";
-          return;
-        }
-        if (amount < minWithdraw) {
-          document.getElementById("withdrawStatus").innerText = `❌ Minimum withdrawal is ${minWithdraw} points!`;
-          return;
-        }
-
-        if (user.balance >= amount) {
-          user.balance -= amount;
-        } else {
-          const remaining = amount - user.balance;
-          user.balance = 0;
-          refEarn -= remaining;
-        }
-
-        document.getElementById("withdrawStatus").innerText =
-          `✅ Withdrawal request of Rs. ${amount} sent to ${method} wallet ${wallet}.`;
-
-        document.getElementById("amount").value = "";
-        updateBalances();
-
-        Telegram.WebApp.sendData(`withdraw|${method}|${wallet}|${amount}`);
-      }
-
-      function addReferral() {
-        referrals++;
-        refEarn += rewardPerReferral;
+      } else {
+        let data = snap.val();
+        user.balance = data.balance || 0;
+        views = data.adsWatched || 0;
+        refEarn = data.referralEarning || 0;
+        referrals = data.referrals || 0;
+        document.getElementById("counter").innerText = `📛 Daily Limit = ${views}`;
         document.getElementById("totalRefs").innerText = referrals;
-        updateBalances();
       }
+
+      document.getElementById("username").innerText = tgUser.username ? `@${tgUser.username}` : tgUser.first_name;
+      document.getElementById("refLink").value = `https://t.me/AdsclicksBot?start=${userId}`;
       updateBalances();
-    </script>
-  </body>
+    });
+
+    function updateBalances() {
+      const total = user.balance + refEarn;
+      document.getElementById("balance").innerText = `Rs. ${user.balance.toFixed(2)}`;
+      document.getElementById("refEarnings").innerText = `Rs. ${refEarn.toFixed(2)}`;
+      document.getElementById("withdrawBalance").innerText = `Rs. ${total.toFixed(2)}`;
+    }
+
+    function startAd() {
+      if (views >= maxViews) {
+        alert("Limit reached!");
+        return;
+      }
+
+      const adWindow = window.open("adsearn.html", "_blank");
+      document.getElementById("watchBtn").disabled = true;
+      document.getElementById("watchBtn").innerText = "⏳ Watching...";
+
+      setTimeout(() => {
+        views++;
+        user.balance += rewardPerView;
+
+        userRef.update({
+          balance: user.balance,
+          adsWatched: views
+        });
+
+        updateBalances();
+        Telegram.WebApp.sendData("ad_done");
+
+        document.getElementById("counter").innerText = `📛 Daily Limit = ${views}`;
+        document.getElementById("watchBtn").disabled = false;
+        document.getElementById("watchBtn").innerText = "▶️ Watch Ad";
+      }, 20000);
+    }
+
+    function withdraw() {
+      const method = document.getElementById("method").value;
+      const wallet = document.getElementById("wallet").value;
+      const amount = parseFloat(document.getElementById("amount").value);
+      const totalBalance = user.balance + refEarn;
+
+      if (wallet.length < 10) {
+        document.getElementById("withdrawStatus").innerText = "❌ Invalid wallet number!";
+        return;
+      }
+      if (amount < 30 || amount > totalBalance) {
+        document.getElementById("withdrawStatus").innerText = "❌ Invalid amount!";
+        return;
+      }
+
+      if (user.balance >= amount) {
+        user.balance -= amount;
+      } else {
+        const diff = amount - user.balance;
+        user.balance = 0;
+        refEarn -= diff;
+      }
+
+      updateBalances();
+      document.getElementById("withdrawStatus").innerText = `✅ Rs. ${amount} sent to ${wallet}`;
+      Telegram.WebApp.sendData(`withdraw|${method}|${wallet}|${amount}`);
+    }
+
+    function copyReferral() {
+      const copyText = document.getElementById("refLink");
+      copyText.select();
+      copyText.setSelectionRange(0, 99999);
+      document.execCommand("copy");
+      document.getElementById("copyMsg").innerText = "✅ Copied!";
+      setTimeout(() => {
+        document.getElementById("copyMsg").innerText = "";
+      }, 1500);
+    }
+  </script>
+</body>
 </html>
