@@ -41,7 +41,6 @@
       color: white;
       border: 1px solid #555;
     }
-
     /* Captcha popup styles */
     #captchaBox {
       position: fixed;
@@ -67,6 +66,11 @@
     #error {
       margin-top: 10px;
       color: #e74c3c;
+    }
+    #copyMsg {
+      margin-top: 5px;
+      color: lightgreen;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -95,7 +99,7 @@
     <p>🔗 Referral Link</p>
     <input type="text" id="refLink" readonly onclick="copyReferral()" />
     <button onclick="copyReferral()">📋 Copy Referral Link</button>
-    <p id="copyMsg" style="color: lightgreen;"></p>
+    <p id="copyMsg"></p>
   </div>
 
   <h3>💵 Withdraw Money</h3>
@@ -125,13 +129,6 @@
   </div>
 
 <script>
-  const rewardPerView = 0.2;
-  const rewardPerReferral = 0.5;
-  const maxViews = 100;
-
-  let views = 0, referrals = 0, refEarn = 0;
-  let user = { balance: 0 };
-
   // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyCSm5ieUET95VXEA69JtViX9su5ClMUrCU",
@@ -151,16 +148,22 @@
 
   const tgUser = Telegram.WebApp.initDataUnsafe.user;
   const referralId = Telegram.WebApp.initDataUnsafe.start_param;
-  const userId = tgUser.id;
-  const userRef = db.ref("users/" + userId);
+  const userId = tgUser ? tgUser.id : null;
 
-  let captchaCode = "";
-
-  function generateCaptcha() {
-    return Math.floor(100 + Math.random() * 900).toString();
+  if (!tgUser) {
+    alert("Please open this inside Telegram.");
   }
 
-  // Load user data or create new user
+  const rewardPerView = 0.2;
+  const rewardPerReferral = 0.5;
+  const maxViews = 100;
+
+  let views = 0, referrals = 0, refEarn = 0;
+  let user = { balance: 0 };
+
+  const userRef = db.ref("users/" + userId);
+
+  // Load user or create
   userRef.once("value").then(snap => {
     if (!snap.exists()) {
       userRef.set({
@@ -172,6 +175,7 @@
         referredBy: referralId || null
       });
 
+      // Update referral data if exists
       if (referralId) {
         const refRef = db.ref("users/" + referralId);
         refRef.once("value").then(refSnap => {
@@ -206,7 +210,13 @@
     document.getElementById("withdrawBalance").innerText = `Rs. ${total.toFixed(2)}`;
   }
 
-  // === CAPTCHA logic ===
+  // Captcha logic
+  let captchaCode = "";
+
+  function generateCaptcha() {
+    return Math.floor(100 + Math.random() * 900).toString();
+  }
+
   function showCaptcha() {
     captchaCode = generateCaptcha();
     const questionEl = document.getElementById("question");
@@ -224,21 +234,19 @@
   function verifyCaptcha() {
     const userInput = document.getElementById("answer").value;
     if (userInput === captchaCode) {
-      // Close captcha popup
       document.getElementById("captchaBox").style.display = "none";
 
-      // Open ad page
-      window.open("https://go.monetag.com/abc123", "_blank");
-
-      // Update views and balance
       if (views >= maxViews) {
         alert("Daily limit reached!");
         return;
       }
+
+      // Open monetag link in new tab
+      window.open("https://go.monetag.com/abc123", "_blank");
+
       views++;
       user.balance += rewardPerView;
 
-      // Update Firebase
       userRef.update({
         balance: user.balance,
         adsWatched: views
@@ -291,10 +299,8 @@
     }, 1500);
   }
 
-  // 👑 Admin Panel Button
+  // Admin panel button
   const adminId = 7313389640;
-  const tgUser = Telegram.WebApp.initDataUnsafe.user;
-
   if (tgUser && tgUser.id === adminId) {
     const adminBtn = document.createElement("button");
     adminBtn.innerText = "👑 Admin Panel";
@@ -309,9 +315,10 @@
       border-radius: 10px;
       font-size: 16px;
       z-index: 9999;
+      cursor: pointer;
     `;
     adminBtn.onclick = () => {
-      window.location.href = "admin.html"; 
+      window.location.href = "admin.html";
     };
     document.body.appendChild(adminBtn);
   }
