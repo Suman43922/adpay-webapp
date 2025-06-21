@@ -178,7 +178,7 @@
         // Move to deletedUsers
         db.ref("deletedUsers/" + uid).set(userData).then(() => {
           userRef.remove().then(() => {
-            document.getElementById("userActionMsg").innerText = "✅ User archived (soft deleted)!";
+            document.getElementById("userActionMsg").innerText = "✅ User deleted!";
           });
         });
       });
@@ -195,7 +195,7 @@
 
       deletedRef.once("value").then(snap => {
         if (!snap.exists()) {
-          document.getElementById("userActionMsg").innerText = "❌ No archived user found!";
+          document.getElementById("userActionMsg").innerText = "❌ No deleted user found!";
           return;
         }
         const userData = snap.val();
