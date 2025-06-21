@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Watch & Earn</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f2f2f2;
+      padding: 30px;
+    }
+    h2 {
+      color: #333;
+    }
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      margin-top: 20px;
+      border: none;
+      background: #4CAF50;
+      color: white;
+      border-radius: 8px;
+    }
+    #captchaBox {
+      margin-top: 20px;
+      display: none;
+    }
+    input {
+      font-size: 16px;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+    }
+  </style>
+</head>
+<body>
+  <h2>🎬 Watch Ad & Earn</h2>
+  <p>Click the button below to start</p>
+  <button onclick="showCaptcha()">🎥 Watch Ad</button>
+
+  <div id="captchaBox">
+    <p id="question"></p>
+    <input type="text" id="answer" placeholder="Enter 3-digit code" maxlength="3" />
+    <br><br>
+    <button onclick="verifyCaptcha()">✅ Submit</button>
+    <p id="error" style="color:red;"></p>
+  </div>
+
+  <script>
+    let code = "";
+
+    function showCaptcha() {
+      document.getElementById('captchaBox').style.display = "block";
+      code = Math.floor(100 + Math.random() * 900).toString(); // random 3 digit
+      document.getElementById("question").innerText = `Enter this code to continue: ${code}`;
+      document.getElementById("error").innerText = "";
+      document.getElementById("answer").value = "";
+    }
+
+    function verifyCaptcha() {
+      const userInput = document.getElementById("answer").value;
+      if (userInput === code) {
+        // ✅ Replace with your actual Monetag link below:
+        window.open("https://go.monetag.com/abc123", "_blank");
+        document.getElementById('captchaBox').style.display = "none";
+      } else {
+        document.getElementById("error").innerText = "❌ Incorrect code. Try again.";
+      }
+    }
+  </script>
+</body>
+</html>
