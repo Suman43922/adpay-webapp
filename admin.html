@@ -1,0 +1,166 @@
+<!DOCTYPE html><html>
+<head>
+  <title>Admin Panel - AdPay</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #111;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    .card {
+      background: #1e1e1e;
+      padding: 20px;
+      margin: 20px auto;
+      border-radius: 10px;
+      max-width: 450px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+    }
+    input, select {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      background: #2a2a2a;
+      border: 1px solid #555;
+      color: white;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #007bff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 16px;
+      color: white;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+    .success { color: lightgreen; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <h2>👑 Admin Dashboard</h2>
+  <p id="accessStatus">Checking access...</p>  <div id="adminPanel" style="display: none;"><div class="card">
+  <h3>🧾 Balance Control</h3>
+  <input type="text" id="targetUser" placeholder="User ID" />
+  <input type="number" id="amount" placeholder="Amount" />
+  <select id="action">
+    <option value="add">Add</option>
+    <option value="remove">Remove</option>
+  </select>
+  <button onclick="modifyBalance()">🧮 Update Balance</button>
+  <p id="balMsg" class="success"></p>
+</div>
+
+<div class="card">
+  <h3>🔍 User Info</h3>
+  <input type="text" id="infoUser" placeholder="User ID to Fetch Info" />
+  <button onclick="getUserInfo()">📄 Get Info</button>
+  <p id="userInfo" style="font-size: 14px;"></p>
+  <button onclick="deleteUser()">🗑️ Delete User</button>
+  <button onclick="copyRef()">🔗 Copy Referral Link</button>
+  <p id="userActionMsg" class="success"></p>
+</div>
+
+<div class="card">
+  <h3>👥 Total Users</h3>
+  <button onclick="getTotalUsers()">🔢 Count Users</button>
+  <p id="userCount"></p>
+</div>
+
+<div class="card">
+  <h3>📥 Withdraw Requests</h3>
+  <button onclick="getWithdrawals()">📄 View Requests</button>
+  <div id="withdrawList" style="text-align: left;"></div>
+</div>
+
+  </div>  <script>
+    const adminIds = [7313389640];
+    const firebaseConfig = {
+      apiKey: "AIzaSyCSm5ieUET95VXEA69JtViX9su5ClMUrCU",
+      authDomain: "adpayrewards-5d60d.firebaseapp.com",
+      databaseURL: "https://adpayrewards-5d60d-default-rtdb.firebaseio.com",
+      projectId: "adpayrewards-5d60d",
+      storageBucket: "adpayrewards-5d60d.appspot.com",
+      messagingSenderId: "45534721620",
+      appId: "1:45534721620:web:75757cda1537e3c7f35fc1"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    Telegram.WebApp.ready();
+    Telegram.WebApp.expand();
+
+    const tgUser = Telegram.WebApp.initDataUnsafe.user;
+    const userId = tgUser.id;
+
+    if (adminIds.includes(userId)) {
+      document.getElementById("accessStatus").innerText = "✅ Admin access granted";
+      document.getElementById("adminPanel").style.display = "block";
+    } else {
+      document.getElementById("accessStatus").innerText = "❌ You are not an admin.";
+    }
+
+    function modifyBalance() {
+      const uid = document.getElementById("targetUser").value;
+      const amt = parseFloat(document.getElementById("amount").value);
+      const act = document.getElementById("action").value;
+      const ref = db.ref("users/" + uid);
+      ref.once("value").then(snap => {
+        if (!snap.exists()) return document.getElementById("balMsg").innerText = "❌ User not found";
+        let d = snap.val();
+        d.balance = parseFloat(d.balance || 0);
+        d.balance = act === "add" ? d.balance + amt : Math.max(0, d.balance - amt);
+        ref.update({ balance: d.balance });
+        document.getElementById("balMsg").innerText = `✅ Balance updated: Rs. ${d.balance.toFixed(2)}`;
+      });
+    }
+
+    function getUserInfo() {
+      const uid = document.getElementById("infoUser").value;
+      const ref = db.ref("users/" + uid);
+      ref.once("value").then(snap => {
+        if (!snap.exists()) {
+          document.getElementById("userInfo").innerText = "❌ User not found!";
+          return;
+        }
+        const data = snap.val();
+        document.getElementById("userInfo").innerText =
+          `👤 Username: ${data.username || "N/A"}\n` +
+          `💰 Balance: Rs. ${data.balance?.toFixed(2) || 0}\n` +
+          `📺 Ads Watched: ${data.adsWatched || 0}\n` +
+          `👥 Referrals: ${data.referrals || 0}`;
+      });
+    }
+
+    function deleteUser() {
+      const uid = document.getElementById("infoUser").value;
+      db.ref("users/" + uid).remove().then(() => {
+        document.getElementById("userActionMsg").innerText = "✅ User deleted!";
+      });
+    }
+
+    function copyRef() {
+      const uid = document.getElementById("infoUser").value;
+      const refLink = `https://t.me/AdsclicksBot?start=${uid}`;
+      navigator.clipboard.writeText(refLink).then(() => {
+        document.getElementById("userActionMsg").innerText = "✅ Referral link copied!";
+      });
+    }
+
+    function getTotalUsers() {
+      db.ref("users").once("value").then(snap => {
+        document.getElementById("userCount").innerText = `Total Users: ${snap.numChildren()}`;
+      });
+    }
+  </script>
+</body>
+</html>
