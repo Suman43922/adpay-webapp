@@ -51,7 +51,6 @@
   <p id="accessStatus">Checking access...</p>
 
   <div id="adminPanel" style="display: none;">
-
     <div class="card">
       <h3>🧾 Balance Control</h3>
       <input type="text" id="targetUser" placeholder="User ID" />
@@ -65,28 +64,27 @@
     </div>
 
     <div class="card">
-  <h3>🔍 User Info</h3>
-  <input type="text" id="infoUser" placeholder="User ID to Fetch Info" />
-  <button onclick="getUserInfo()">📄 Users Info</button>
-  <button onclick="deleteUser()">🗑️ Deleted Users</button>
-  <button onclick="restoreUser()">♻️ Restored Users</button>
-  <button onclick="viewDeletedUsers()">📋 View Deleted Users</button>
-  <p id="userActionMsg" class="success"></p>
-  <p id="userInfo" style="font-size: 14px; white-space: pre-line;"></p>
+      <h3>🔍 User Info</h3>
+      <input type="text" id="infoUser" placeholder="User ID to Fetch Info" />
+      <button onclick="getUserInfo()">📄 Users Info</button>
+      <button onclick="deleteUser()">🗑️ Delete User</button>
+      <button onclick="restoreUser()">♻️ Restore User</button>
+      <button onclick="viewDeletedUsers()">📋 View Deleted Users</button>
+      <p id="userActionMsg" class="success"></p>
+      <p id="userInfo" style="font-size: 14px; white-space: pre-line;"></p>
     </div>
 
-    <!-- ✅ Centered More Panel Here -->
     <div class="card">
       <h3>⚙️ More Settings</h3>
       <button onclick="window.location.href='logs.html'">📜 Admin Logs</button>
       <button onclick="window.location.href='total.html'">🧑‍💻 Total Users</button>
       <button onclick="window.location.href='request.html'">📄 Withdraw Requests</button>
     </div>
-
   </div>
 
   <script>
-    const adminIds = [7313389640];
+    const adminIds = [7313389640]; // 👑 Put your Telegram user ID(s) here
+
     const firebaseConfig = {
       apiKey: "AIzaSyCSm5ieUET95VXEA69JtViX9su5ClMUrCU",
       authDomain: "adpayrewards-5d60d.firebaseapp.com",
@@ -98,17 +96,26 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
     Telegram.WebApp.ready();
     Telegram.WebApp.expand();
-    const tgUser = Telegram.WebApp.initDataUnsafe.user;
-    const userId = tgUser.id;
 
-    if (adminIds.includes(userId)) {
-      document.getElementById("accessStatus").innerText = "✅ Admin access granted";
-      document.getElementById("adminPanel").style.display = "block";
-    } else {
-      document.getElementById("accessStatus").innerText = "❌ You are not an admin.";
-    }
+    // Wait a bit before checking access
+    setTimeout(() => {
+      const tgUser = Telegram.WebApp.initDataUnsafe?.user;
+      if (!tgUser || !tgUser.id) {
+        document.getElementById("accessStatus").innerText = "❌ Could not fetch Telegram user.";
+        return;
+      }
+
+      const userId = tgUser.id;
+      if (adminIds.includes(userId)) {
+        document.getElementById("accessStatus").innerText = "✅ Admin access granted";
+        document.getElementById("adminPanel").style.display = "block";
+      } else {
+        document.getElementById("accessStatus").innerText = "❌ You are not an admin.";
+      }
+    }, 200);
 
     function modifyBalance() {
       const uid = document.getElementById("targetUser").value.trim();
@@ -118,26 +125,27 @@
         document.getElementById("balMsg").innerText = "❌ Enter valid User ID and Amount";
         return;
       }
+
       const ref = db.ref("users/" + uid);
-ref.on("value", snap => {
-  if (!snap.exists()) {
-    document.getElementById("userInfo").innerText = "❌ User not found!";
-    return;
-  }
-  const data = snap.val();
-  document.getElementById("userInfo").innerText =
-    `👤 Username: ${data.username || "N/A"}\n` +
-    `💰 Balance: Rs. ${parseFloat(data.balance || 0).toFixed(2)}\n` +
-    `📺 Ads Watched: ${data.adsWatched || 0}\n` +
-    `👥 Referrals: ${data.referrals || 0}`;
-});
+      ref.once("value").then(snap => {
+        if (!snap.exists()) {
+          document.getElementById("balMsg").innerText = "❌ User not found!";
+          return;
+        }
+        const data = snap.val();
+        let current = parseFloat(data.balance || 0);
+        if (act === "add") current += amt;
+        else current = Math.max(0, current - amt);
+
+        ref.update({ balance: current }).then(() => {
+          document.getElementById("balMsg").innerText = `✅ Balance ${act}ed successfully!`;
+        });
+      });
+    }
 
     function getUserInfo() {
       const uid = document.getElementById("infoUser").value.trim();
-      if (!uid) {
-        document.getElementById("userInfo").innerText = "❌ Enter User ID";
-        return;
-      }
+      if (!uid) return document.getElementById("userInfo").innerText = "❌ Enter User ID";
       const ref = db.ref("users/" + uid);
       ref.once("value").then(snap => {
         if (!snap.exists()) {
@@ -147,18 +155,15 @@ ref.on("value", snap => {
         const data = snap.val();
         document.getElementById("userInfo").innerText =
           `👤 Username: ${data.username || "N/A"}\n` +
-          `💰 Balance: Rs. ${data.balance?.toFixed(2) || 0}\n` +
+          `💰 Balance: Rs. ${(data.balance || 0).toFixed(2)}\n` +
           `📺 Ads Watched: ${data.adsWatched || 0}\n` +
-          `👥 Referrals: ${data.referrals || 0}`;
+          `👥 Referrals: ${data.totalRefs || 0}`;
       });
     }
 
     function deleteUser() {
       const uid = document.getElementById("infoUser").value.trim();
-      if (!uid) {
-        document.getElementById("userActionMsg").innerText = "❌ Enter User ID first";
-        return;
-      }
+      if (!uid) return document.getElementById("userActionMsg").innerText = "❌ Enter User ID";
       const userRef = db.ref("users/" + uid);
       userRef.once("value").then(snap => {
         if (!snap.exists()) {
@@ -177,10 +182,7 @@ ref.on("value", snap => {
 
     function restoreUser() {
       const uid = document.getElementById("infoUser").value.trim();
-      if (!uid) {
-        document.getElementById("userActionMsg").innerText = "❌ Enter User ID first";
-        return;
-      }
+      if (!uid) return document.getElementById("userActionMsg").innerText = "❌ Enter User ID";
       const deletedRef = db.ref("deletedUsers/" + uid);
       const userRef = db.ref("users/" + uid);
       deletedRef.once("value").then(snap => {
@@ -199,12 +201,6 @@ ref.on("value", snap => {
 
     function viewDeletedUsers() {
       window.location.href = "delete.html";
-    }
-
-    function getTotalUsers() {
-      db.ref("users").once("value").then(snapshot => {
-        document.getElementById("userCount").innerText = `Total Users: ${snapshot.numChildren()}`;
-      });
     }
   </script>
 </body>
