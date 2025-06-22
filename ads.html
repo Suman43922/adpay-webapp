@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html>
 <head>
   <title>AdPay WebApp</title>
   <meta charset="UTF-8" />
@@ -55,61 +54,54 @@
       margin-left: auto;
       margin-right: auto;
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    }
+    }#captchaBox {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: #2a2a2a;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px #9b59b6;
+  display: none;
+  z-index: 9999;
+  width: 300px;
+  color: white;
+}
+#inputBox {
+  margin-top: 15px;
+}
+#captchaBox p#question {
+  cursor: pointer;
+  font-size: 18px;
+  user-select: none;
+}
+#error {
+  margin-top: 10px;
+  color: #e74c3c;
+}
 
-    #captchaBox {
-      position: fixed;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      background: #2a2a2a;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 0 15px #9b59b6;
-      display: none;
-      z-index: 9999;
-      width: 300px;
-      color: white;
-    }
-    #inputBox {
-      margin-top: 15px;
-    }
-    #captchaBox p#question {
-      cursor: pointer;
-      font-size: 18px;
-      user-select: none;
-    }
-    #error {
-      margin-top: 10px;
-      color: #e74c3c;
-    }
+@keyframes ring {
+  0% { transform: rotate(0); }
+  25% { transform: rotate(15deg); }
+  75% { transform: rotate(-15deg); }
+  100% { transform: rotate(0); }
+}
 
-    @keyframes ring {
-      0% { transform: rotate(0); }
-      25% { transform: rotate(15deg); }
-      75% { transform: rotate(-15deg); }
-      100% { transform: rotate(0); }
-    }
   </style>
 </head>
-<body>
-
-  <h2>🎁 Invite And Earn!</h2>
+<body>  <h2>🎁 Invite And Earn!</h2>
   <div class="card">
     <p>1️⃣ Share your referral link</p>
     <p>2️⃣ Friends join through your link</p>
     <p>3️⃣ They watch their first ad</p>
     <p>4️⃣ You earn <b>Rs. 0.50</b>!</p>
-  </div>
-
-  <h2>📺 Watch Ads</h2>
+  </div>  <h2>📺 Watch Ads</h2>
   <div class="card">
     <p><b>👤 Username = </b> <span id="username">Loading...</span></p>
     <p>💰 Ads Balance = <b id="balance">Rs. 0.00</b></p>
     <p><span id="counter">📛 Daily Limit = 0</span>/100</p>
     <button id="watchBtn" onclick="showCaptcha()">▶️ Watch Ad</button>
-  </div>
-
-  <h3>🙌 Referral System</h3>
+  </div>  <h3>🙌 Referral System</h3>
   <div class="card">
     <p>👥 Total Referrals = <b id="totalRefs">0</b></p>
     <p>💸 Referral Balance = <b id="refEarnings">Rs. 0.00</b></p>
@@ -117,9 +109,7 @@
     <input type="text" id="refLink" readonly onclick="copyReferral()" />
     <button onclick="copyReferral()">📋 Copy Referral Link</button>
     <p id="copyMsg" style="color: lightgreen;"></p>
-  </div>
-
-  <h3>💵 Withdraw Money</h3>
+  </div>  <h3>💵 Withdraw Money</h3>
   <div class="card">
     <p><b>💰 Total Balance =</b> <span id="withdrawBalance">Rs. 0.00</span></p>
     <p><b>🏦 Minimum Withdraw = Rs. 30.00</b></p>
@@ -133,10 +123,7 @@
     <button onclick="withdraw()">💵 Request Withdraw</button>
     <p id="withdrawStatus" style="color: lightgreen;"></p>
     <button onclick="toggleHistory()" class="blueBtn">📜 View Withdraw History</button>
-  </div>
-
-  <!-- CAPTCHA POPUP -->
-  <div id="captchaBox">
+  </div>  <!-- CAPTCHA POPUP -->  <div id="captchaBox">
     <p id="question" onclick="showInputBox()">👉 Tap here 👈</p>
     <div id="inputBox" style="display:none;">
       <input type="text" id="answer" placeholder="Enter 3-digit code" maxlength="3" />
@@ -144,9 +131,7 @@
       <button onclick="verifyCaptcha()">✅ Submit</button>
       <p id="error"></p>
     </div>
-  </div>
-
-<script>
+  </div><script>
   const rewardPerView = 0.2;
   const rewardPerReferral = 0.5;
   const maxViews = 100;
@@ -173,137 +158,14 @@
   const tgUser = Telegram.WebApp.initDataUnsafe.user;
 
   if (!tgUser) {
-    document.body.innerHTML = `
-      <div style="text-align:center; padding: 50px;">
-        <h2 style="color: #ff4d4d;">❌ Telegram User Info Not Found</h2>
-        <p style="font-size:18px;">Please open this WebApp from Telegram only.</p>
-      </div>
-    `;
+    document.body.innerHTML = `<div style="text-align:center; padding: 50px;"><h2 style="color: #ff4d4d;">❌ Telegram User Info Not Found</h2><p style="font-size:18px;">Please open this WebApp from Telegram only.</p></div>`;
     throw new Error("Telegram User not found");
   }
 
-  const referralId = Telegram.WebApp.initDataUnsafe.start_param;
-  const userId = tgUser.id;
-  const userRef = db.ref("users/" + userId);
-
-  // Load user data from DB
-  userRef.once("value", (snapshot) => {
-    const data = snapshot.val() || {};
-
-    // Check if user is blocked
-    if (data.isBlocked) {
-      document.body.innerHTML = `
-        <div style="text-align:center; padding: 50px;">
-          <h2 style="color: #ff4d4d;">🚫 Blocked</h2>
-          <p style="font-size:18px;">📛 Access Denied. Please contact support.</p>
-          <button onclick="Telegram.WebApp.openTelegramLink('https://t.me/Gukha22')" style="
-            background-color: #ff1493;
-            padding: 10px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            color: white;
-            margin-top: 20px;
-          ">💬 Contact Support</button>
-        </div>
-      `;
-      return;
-    }
-
-    user.balance = data.balance || 0;
-    views = data.adsWatched || 0;
-    referrals = data.referrals || 0;
-    refEarn = data.referralBalance || 0;
-
-    updateBalances();
-    document.getElementById("username").innerText = tgUser.username ? `@${tgUser.username}` : tgUser.first_name || "No Name";
-    document.getElementById("refLink").value = `https://t.me/AdpayrewardsBot?start=${userId}`;
-    document.getElementById("counter").innerText = `📛 Daily Limit = ${views}`;
-    document.getElementById("totalRefs").innerText = referrals;
-    document.getElementById("refEarnings").innerText = `Rs. ${refEarn.toFixed(2)}`;
-  });
-
-  function generateCaptcha() {
-    return Math.floor(100 + Math.random() * 900).toString();
-  }
-
-  function showCaptcha() {
-    captchaCode = generateCaptcha();
-    document.getElementById("question").innerText = "👉 Tap here 👈";
-    document.getElementById("inputBox").style.display = "none";
-    document.getElementById("error").innerText = "";
-    document.getElementById("answer").value = "";
-    document.getElementById("captchaBox").style.display = "block";
-  }
-  function showInputBox() {
-    document.getElementById("question").innerText = `👉 Enter this code: ${captchaCode}`;
-    document.getElementById("inputBox").style.display = "block";
-  }
-  
-function verifyCaptcha() {
-  const userInput = document.getElementById("answer").value;
-  if (userInput === captchaCode) {
-    document.getElementById("captchaBox").style.display = "none";
-    startAd();
-  } else {
-    document.getElementById("error").innerText = "❌ Wrong code! Try again.";
-  }
-}
-
-function startAd() {
-  if (views >= maxViews) {
-    alert("📛 Daily limit reached!");
-    return;
-  }
-
-  // Monetag rewarded interstitial ad call
-  show_9477483().then(() => {
-    // User finished watching ad successfully
-    alert("🎉 Reward earned!");
-    views++;
-    user.balance += rewardPerView;
-
-    // Update user data in Firebase
-    userRef.update({
-      adsWatched: views,
-      balance: user.balance
-    });
-
-    // Update UI
-    document.getElementById("counter").innerText = `📛 Daily Limit = ${views}`;
-    updateBalances();
-  }).catch((error) => {
-    // Ad failed or user closed early
-    alert("❌ Ad failed or was skipped. Try again.");
-    console.error(error);
-  });
-}
-
-function updateBalances() {
-  document.getElementById("balance").innerText = `Rs. ${user.balance.toFixed(2)}`;
-  // Add referral earnings if any...
-}
-
-  function copyReferral() {
-    const copyText = document.getElementById("refLink");
-    copyText.select();
-    copyText.setSelectionRange(0, 99999);
-    document.execCommand("copy");
-    document.getElementById("copyMsg").innerText = "✅ Copied!";
-    setTimeout(() => {
-      document.getElementById("copyMsg").innerText = "";
-    }, 1500);
-  }
-
-  function toggleHistory() {
-    window.location.href = "history.html";
-  }
-
-  // Admin Panel Show
   const adminId = 7313389640;
   if (tgUser.id === adminId) {
     const adminBtn = document.createElement("button");
-    adminBtn.innerHTML = "🤴";
+    adminBtn.innerHTML = "🔔 <span style='animation: ring 1s infinite;'>Admin Panel</span>";
     adminBtn.style = `
       position: fixed;
       bottom: 20px;
@@ -312,20 +174,15 @@ function updateBalances() {
       background: #ff1493;
       color: white;
       border: none;
-      border-radius: 50%;
+      border-radius: 50px;
       font-size: 16px;
       z-index: 9999;
       box-shadow: 0 0 10px #ff1493;
-      animation: ring 1s infinite;
     `;
     adminBtn.onclick = () => {
       window.location.href = "admin.html";
     };
     document.body.appendChild(adminBtn);
   }
-</script>
-
-  
-<script src="https://go.monetag.com/script_tag/9477483.js"></script>
-</body>
+</script><script src="https://go.monetag.com/script_tag/9477483.js"></script></body>
 </html>
