@@ -150,7 +150,6 @@
   const rewardPerView = 0.2;
   const rewardPerReferral = 0.5;
   const maxViews = 100;
-
   let views = 0, referrals = 0, refEarn = 0;
   let user = { balance: 0 };
   let captchaCode = "";
@@ -240,106 +239,50 @@
     document.getElementById("question").innerText = `👉 Enter this code: ${captchaCode}`;
     document.getElementById("inputBox").style.display = "block";
   }
-  function verifyCaptcha() {
-    const userInput = document.getElementById("answer").value;
-    if (userInput === captchaCode) {
-      document.getElementById("captchaBox").style.display = "none";
-      startAd();
-    } else {
-      document.getElementById("error").innerText = "❌ Wrong code! Try again.";
-    }
+  
+function verifyCaptcha() {
+  const userInput = document.getElementById("answer").value;
+  if (userInput === captchaCode) {
+    document.getElementById("captchaBox").style.display = "none";
+    startAd();
+  } else {
+    document.getElementById("error").innerText = "❌ Wrong code! Try again.";
+  }
+}
+
+function startAd() {
+  if (views >= maxViews) {
+    alert("📛 Daily limit reached!");
+    return;
   }
 
-  function startAd() {
-    if (views >= maxViews) {
-      alert("📛 Daily limit reached!");
-      return;
-    }
+  // Monetag rewarded interstitial ad call
+  show_9477483().then(() => {
+    // User finished watching ad successfully
+    alert("🎉 Reward earned!");
+    views++;
+    user.balance += rewardPerView;
 
-    window.open("https://otieu.com/4/9471398", "_blank");
-
-    let timeLeft = 15;
-    const timerDiv = document.createElement("div");
-    timerDiv.id = "timer";
-    timerDiv.innerText = `⏳ Wait: ${timeLeft--} sec`;
-    document.body.appendChild(timerDiv);
-
-    const claimBtn = document.createElement("button");
-    claimBtn.innerText = "🎁 Claim Reward";
-    claimBtn.id = "claimBtn";
-    claimBtn.style.display = "none";
-
-    document.getElementById("watchBtn").insertAdjacentElement("afterend", claimBtn);
-
-    const interval = setInterval(() => {
-      timerDiv.innerText = `⏳ Wait: ${timeLeft--} sec`;
-      if (timeLeft < 0) {
-        clearInterval(interval);
-        timerDiv.innerText = "";
-        claimBtn.style.display = "block";
-      }
-    }, 1000);
-
-    claimBtn.onclick = () => {
-      views++;
-      user.balance += rewardPerView;
-      userRef.update({
-        adsWatched: views,
-        balance: user.balance
-      });
-
-      document.getElementById("counter").innerText = `📛 Daily Limit = ${views}`;
-      updateBalances();
-      alert("🎉 Reward Claimed!");
-      claimBtn.remove();
-      timerDiv.remove();
-    };
-  }
-
-  function updateBalances() {
-    const total = user.balance + refEarn;
-    document.getElementById("balance").innerText = `Rs. ${user.balance.toFixed(2)}`;
-    document.getElementById("refEarnings").innerText = `Rs. ${refEarn.toFixed(2)}`;
-    document.getElementById("withdrawBalance").innerText = `Rs. ${total.toFixed(2)}`;
-  }
-
-  function withdraw() {
-    const method = document.getElementById("method").value;
-    const wallet = document.getElementById("wallet").value.trim();
-    const amount = parseFloat(document.getElementById("amount").value);
-    const totalBalance = user.balance + refEarn;
-
-    if (wallet.length < 10) {
-      document.getElementById("withdrawStatus").innerText = "❌ Invalid wallet number!";
-      return;
-    }
-    if (isNaN(amount) || amount < 30 || amount > totalBalance) {
-      document.getElementById("withdrawStatus").innerText = "❌ Invalid amount!";
-      return;
-    }
-
-    if (user.balance >= amount) {
-      user.balance -= amount;
-    } else {
-      const diff = amount - user.balance;
-      user.balance = 0;
-      refEarn -= diff;
-    }
-
-    const withdrawRef = db.ref("withdrawRequests").push();
-    withdrawRef.set({
-      userId: userId,
-      username: tgUser.username || tgUser.first_name,
-      method: method,
-      wallet: wallet,
-      amount: amount,
-      status: "pending",
-      timestamp: Date.now()
+    // Update user data in Firebase
+    userRef.update({
+      adsWatched: views,
+      balance: user.balance
     });
 
+    // Update UI
+    document.getElementById("counter").innerText = `📛 Daily Limit = ${views}`;
     updateBalances();
-    document.getElementById("withdrawStatus").innerText = `✅ Rs. ${amount} requested to ${wallet}`;
-  }
+  }).catch((error) => {
+    // Ad failed or user closed early
+    alert("❌ Ad failed or was skipped. Try again.");
+    console.error(error);
+  });
+}
+
+function updateBalances() {
+  document.getElementById("balance").innerText = `Rs. ${user.balance.toFixed(2)}`;
+  // Add referral earnings if any...
+}
 
   function copyReferral() {
     const copyText = document.getElementById("refLink");
@@ -381,5 +324,8 @@
     document.body.appendChild(adminBtn);
   }
 </script>
+
+  
+<script src="https://go.monetag.com/script_tag/9477483.js"></script>
 </body>
 </html>
