@@ -204,6 +204,7 @@
       views = data.adsWatched || 0;
       usernameSpan.innerText = tgUser.username ? `@${tgUser.username}` : tgUser.first_name;
       updateBalances();
+      generateReferralLink();
     });
 
     function updateBalances() {
