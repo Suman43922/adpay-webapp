@@ -147,7 +147,7 @@
     <p id="error" style="color: red;"></p>
   </div>  <div id="blockOverlay">
     <div class="popupBox">
-      <p class="noSelect">🚫 तपाईंको खाता मा केही समस्या देखिएको छ।<br>कृपया समर्थनसँग सम्पर्क गर्नुहोस्।</p>
+      <p class="noSelect">🚫 Blocked</p>
       <button onclick="closeWebview()">Close Webview</button>
     </div>
   </div>  <script>
@@ -214,7 +214,7 @@
       totalRefsSpan.innerText = referrals;
     }
 function generateReferralLink() {
-  const link = `https://t.me/AdPayBot?start=${userId}`;
+  const link = `https://t.me/AdpayrewardsBot?start=${userId}`;
   document.getElementById("refLink").value = link;
 }
 
