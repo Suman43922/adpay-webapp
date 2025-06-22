@@ -41,7 +41,7 @@
   </style>
 </head>
 <body>
-  <h2>🧑‍💻 All Registered Users</h2>
+  <h2 id="userCount">🧑‍💻 Total Users: ...</h2>
 
   <div id="userList">Loading...</div>
 
@@ -65,15 +65,20 @@
 
     function loadUsers() {
       const userListDiv = document.getElementById("userList");
+      const userCountHeading = document.getElementById("userCount");
+
       db.ref("users").once("value").then(snapshot => {
+        let count = 0;
         let html = "<ul>";
         snapshot.forEach(child => {
+          count++;
           const uid = child.key;
           const data = child.val();
           html += `<li><b>${uid}</b> — @${data.username || "No username"}</li>`;
         });
         html += "</ul>";
         userListDiv.innerHTML = html;
+        userCountHeading.innerText = `🧑‍💻 Total Users: ${count}`;
       });
     }
 
