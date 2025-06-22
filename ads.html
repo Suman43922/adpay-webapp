@@ -1,4 +1,5 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
   <title>AdPay WebApp</title>
   <meta charset="UTF-8" />
@@ -6,6 +7,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -53,130 +55,201 @@
       width: 300px;
       color: white;
     }
-    #adminBtn {
+    #blockOverlay {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background-color: #ff1493;
-      padding: 12px 24px;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      color: white;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.9);
+      display: none;
+      color: red;
+      font-size: 22px;
+      font-weight: bold;
       z-index: 10000;
-      animation: ring 1s infinite;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      text-align: center;
     }
-    @keyframes ring {
-      0% { transform: rotate(0); }
-      25% { transform: rotate(15deg); }
-      50% { transform: rotate(-15deg); }
-      75% { transform: rotate(15deg); }
-      100% { transform: rotate(0); }
+    #blockOverlay button {
+      margin-top: 20px;
+      background-color: red;
+      padding: 10px 20px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      cursor: pointer;
     }
-    .pulse-red {
-      animation: pulse 1.5s infinite;
+    #adminBtn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #ff1493;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 50%;
+  font-size: 16px;
+  color: white;
+  z-index: 10001;
+  box-shadow: 0 0 10px #ff1493; /* subtle glow */
+  cursor: pointer;
     }
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0px red; }
-      50% { box-shadow: 0 0 25px red; }
-      100% { box-shadow: 0 0 0px red; }
-    }
+
   </style>
 </head>
 <body>
-  <div id="mainContent">
-    <h2>🎁 Invite And Earn!</h2>
-    <div class="card">
-      <p>1️⃣ Share your referral link</p>
-      <p>2️⃣ Friends join through your link</p>
-      <p>3️⃣ They watch their first ad</p>
-      <p>4️⃣ You earn <b>Rs. 0.50</b>!</p>
-    </div><h2>📺 Watch Ads</h2>
-<div class="card">
-  <p><b>👤 Username = </b> <span id="username">Loading...</span></p>
-  <p>💰 Ads Balance = <b id="balance">Rs. 0.00</b></p>
-  <p>📊 Total Ads Watched = <b id="adsCount">0</b></p>
-  <button onclick="showCaptcha()">▶️ Watch Ad</button>
-</div>
 
-<h3>🙌 Referral System</h3>
-<div class="card">
-  <p>👥 Total Referrals = <b id="totalRefs">0</b></p>
-  <p>💸 Referral Balance = <b id="refEarnings">Rs. 0.00</b></p>
-  <p>🔗 Referral Link</p>
-  <input type="text" id="refLink" readonly onclick="copyReferral()" />
-  <button onclick="copyReferral()">📋 Copy Referral Link</button>
-  <p id="copyMsg" style="color: lightgreen;"></p>
-</div>
+  <h2>🎁 Invite And Earn!</h2>
+  <div class="card">
+    <p>1️⃣ Share your referral link</p>
+    <p>2️⃣ Friends join through your link</p>
+    <p>3️⃣ They wa#adminBtn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #ff1493;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 50%;
+  font-size: 16px;
+  color: white;
+  z-index: 10001;
+  box-shadow: 0 0 10px #ff1493; /* subtle glow */
+  cursor: pointer;
+  /* animation: none; */  /* animation हटाइयो */
+      }
+      tch their first ad</p>
+    <p>4️⃣ You earn <b>Rs. 0.50</b>!</p>
+  </div>
 
-<h3>💵 Withdraw Money</h3>
-<div class="card">
-  <p><b>💰 Total Balance =</b> <span id="withdrawBalance">Rs. 0.00</span></p>
-  <p><b>🏦 Minimum Withdraw = Rs. 30.00</b></p>
-  <select id="method">
-    <option value="esewa">eSewa</option>
-    <option value="imepay">IME Pay</option>
-    <option value="khalti">Khalti</option>
-  </select>
-  <input type="text" id="wallet" placeholder="Enter phone number" />
-  <input type="number" id="amount" placeholder="Enter amount to withdraw" />
-  <button onclick="withdraw()">💵 Request Withdraw</button>
-  <button onclick="location.href='history.html'">📜 View Withdraw History</button>
-  <p id="withdrawStatus" style="color: lightgreen;"></p>
-</div>
+  <h2>📺 Watch Ads</h2>
+  <div class="card" id="adsSection">
+    <p><b>👤 Username = </b> <span id="username">Loading...</span></p>
+    <p>💰 Ads Balance = <b id="balance">Rs. 0.00</b></p>
+    <p>👀 Total Ads Watched = <b id="adsWatched">0</b></p>
+    <button onclick="showCaptcha()">▶️ Watch Ad</button>
+  </div>
 
-  </div>  <div id="captchaBox">
+  <h3>🙌 Referral System</h3>
+  <div class="card" id="referralSection">
+    <p>👥 Total Referrals = <b id="totalRefs">0</b></p>
+    <p>💸 Referral Balance = <b id="refEarnings">Rs. 0.00</b></p>
+    <p>🔗 Referral Link</p>
+    <input type="text" id="refLink" readonly onclick="copyReferral()" />
+    <button onclick="copyReferral()">📋 Copy Referral Link</button>
+    <p id="copyMsg" style="color: lightgreen;"></p>
+  </div>
+
+  <h3>💵 Withdraw Money</h3>
+  <div class="card" id="withdrawSection">
+    <p><b>💰 Total Balance =</b> <span id="withdrawBalance">Rs. 0.00</span></p>
+    <p><b>🏦 Minimum Withdraw = Rs. 30.00</b></p>
+    <select id="method">
+      <option value="esewa">eSewa</option>
+      <option value="imepay">IME Pay</option>
+      <option value="khalti">Khalti</option>
+    </select>
+    <input type="text" id="wallet" placeholder="Enter phone number" />
+    <input type="number" id="amount" placeholder="Enter amount to withdraw" />
+    <button onclick="withdraw()">💵 Request Withdraw</button>
+    <button onclick="location.href='history.html'">📜 View Withdraw History</button>
+    <p id="withdrawStatus" style="color: lightgreen;"></p>
+  </div>
+
+  <!-- CAPTCHA POPUP -->
+  <div id="captchaBox">
     <p>Enter Code: <b id="captchaCode"></b></p>
     <input type="text" id="captchaInput" placeholder="Enter code" maxlength="3" />
     <br />
     <button onclick="verifyCaptcha()">✅ Submit</button>
     <p id="error" style="color: red;"></p>
-  </div>  <script>
+  </div>
+
+  <!-- BLOCKED USER OVERLAY -->
+  <div id="blockOverlay">
+    🚫 Something is wrong with your account.<br/>
+    Please contact support.<br/>
+    <button onclick="closeWebview()">Close</button>
+  </div>
+
+  <script>
     const rewardPerView = 0.2;
     const rewardPerReferral = 0.5;
     let views = 0, referrals = 0, refEarn = 0;
     let user = { balance: 0 };
     let captchaCode = "";
 
-    const firebaseConfig = { /* your config here */ };
+    const firebaseConfig = {
+      apiKey: "AIzaSyCSm5ieUET95VXEA69JtViX9su5ClMUrCU",
+      authDomain: "adpayrewards-5d60d.firebaseapp.com",
+      databaseURL: "https://adpayrewards-5d60d-default-rtdb.firebaseio.com",
+      projectId: "adpayrewards-5d60d",
+      storageBucket: "adpayrewards-5d60d.appspot.com",
+      messagingSenderId: "45534721620",
+      appId: "1:45534721620:web:75757cda1537e3c7f35fc1"
+    };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     Telegram.WebApp.ready();
     Telegram.WebApp.expand();
+
     const tgUser = Telegram.WebApp.initDataUnsafe.user;
-    const userId = tgUser.id;
     const referralId = Telegram.WebApp.initDataUnsafe.start_param;
+    const userId = tgUser.id;
     const userRef = db.ref("users/" + userId);
 
-    document.getElementById("username").innerText = tgUser.username ? `@${tgUser.username}` : tgUser.first_name;
-    document.getElementById("refLink").value = `https://t.me/AdpayrewardsBot?start=${userId}`;
+    // UI elements
+    const usernameSpan = document.getElementById("username");
+    const refLinkInput = document.getElementById("refLink");
+    const balanceSpan = document.getElementById("balance");
+    const adsWatchedSpan = document.getElementById("adsWatched");
+    const totalRefsSpan = document.getElementById("totalRefs");
+    const refEarningsSpan = document.getElementById("refEarnings");
+    const withdrawBalanceSpan = document.getElementById("withdrawBalance");
+    const withdrawStatusP = document.getElementById("withdrawStatus");
+    const adsSection = document.getElementById("adsSection");
+    const referralSection = document.getElementById("referralSection");
+    const withdrawSection = document.getElementById("withdrawSection");
+    const blockOverlay = document.getElementById("blockOverlay");
 
-    userRef.once("value", snapshot => {
+    // Show user info & check block
+    userRef.once("value", (snapshot) => {
       const data = snapshot.val() || {};
+
       if (data.isBlocked) {
-        document.body.innerHTML = `
-          <h2 class='pulse-red' style='color:red;'>🚫 You Are Blocked</h2>
-          <p>Please contact support or admin.</p>
-          <button onclick="Telegram.WebApp.close()">❌ Close WebView</button>
-        `;
+        blockOverlay.style.display = "flex";
+        adsSection.style.display = "none";
+        referralSection.style.display = "none";
+        withdrawSection.style.display = "none";
         return;
       }
+
       user.balance = data.balance || 0;
       views = data.adsWatched || 0;
       referrals = data.totalRefs || 0;
       refEarn = data.refEarnings || 0;
+
       updateBalances();
     });
 
+    // Show username and referral link
+    usernameSpan.innerText = tgUser.username ? `@${tgUser.username}` : tgUser.first_name;
+    refLinkInput.value = `https://t.me/AdpayrewardsBot?start=${userId}`;
+
+    // Handle referral increment once per new user
     if (referralId && referralId !== userId.toString()) {
       const refUser = db.ref("users/" + referralId);
-      refUser.once("value", snap => {
+      refUser.once("value", (snap) => {
         if (snap.exists()) {
           const refData = snap.val();
+          const newEarnings = (refData.refEarnings || 0) + rewardPerReferral;
+          const newRefs = (refData.totalRefs || 0) + 1;
           refUser.update({
-            refEarnings: (refData.refEarnings || 0) + rewardPerReferral,
-            totalRefs: (refData.totalRefs || 0) + 1
+            refEarnings: newEarnings,
+            totalRefs: newRefs
           });
         }
       });
@@ -184,13 +257,14 @@
 
     function updateBalances() {
       const total = user.balance + refEarn;
-      document.getElementById("balance").innerText = `Rs. ${user.balance.toFixed(2)}`;
-      document.getElementById("refEarnings").innerText = `Rs. ${refEarn.toFixed(2)}`;
-      document.getElementById("withdrawBalance").innerText = `Rs. ${total.toFixed(2)}`;
-      document.getElementById("totalRefs").innerText = referrals;
-      document.getElementById("adsCount").innerText = views;
+      balanceSpan.innerText = `Rs. ${user.balance.toFixed(2)}`;
+      adsWatchedSpan.innerText = views;
+      totalRefsSpan.innerText = referrals;
+      refEarningsSpan.innerText = `Rs. ${refEarn.toFixed(2)}`;
+      withdrawBalanceSpan.innerText = `Rs. ${total.toFixed(2)}`;
     }
 
+    // Show captcha popup
     function showCaptcha() {
       captchaCode = Math.floor(100 + Math.random() * 900).toString();
       document.getElementById("captchaCode").innerText = captchaCode;
@@ -199,16 +273,25 @@
       document.getElementById("captchaBox").style.display = "block";
     }
 
+    // Verify captcha input
     function verifyCaptcha() {
       const input = document.getElementById("captchaInput").value.trim();
       if (input === captchaCode) {
         document.getElementById("captchaBox").style.display = "none";
-        rewardUser();
+        startAd();
       } else {
         document.getElementById("error").innerText = "❌ Wrong code!";
       }
     }
 
+    // Start ad reward process (simulate)
+    function startAd() {
+      // Here, you can call your real rewarded ad network API
+      // For simulation, use fallback timer
+      fallbackTimer();
+    }
+
+    // Reward user after ad or timer
     function rewardUser() {
       views++;
       user.balance += rewardPerView;
@@ -220,10 +303,27 @@
       alert("🎉 Reward Claimed!");
     }
 
+    // Fallback timer if ad network not available
+    function fallbackTimer() {
+      let timeLeft = 15;
+      const timer = document.createElement("div");
+      timer.innerText = `⏳ Wait: ${timeLeft--} sec`;
+      document.body.appendChild(timer);
+
+      const interval = setInterval(() => {
+        timer.innerText = `⏳ Wait: ${timeLeft--} sec`;
+        if (timeLeft < 0) {
+          clearInterval(interval);
+          timer.remove();
+          rewardUser();
+        }
+      }, 1000);
+    }
+
+    // Copy referral link to clipboard
     function copyReferral() {
-      const copyText = document.getElementById("refLink");
-      copyText.select();
-      copyText.setSelectionRange(0, 99999);
+      refLinkInput.select();
+      refLinkInput.setSelectionRange(0, 99999); // For mobile devices
       document.execCommand("copy");
       document.getElementById("copyMsg").innerText = "✅ Copied!";
       setTimeout(() => {
@@ -231,21 +331,25 @@
       }, 1500);
     }
 
+    // Withdraw request
     function withdraw() {
       const method = document.getElementById("method").value;
-      const wallet = document.getElementById("wallet").value;
+      const wallet = document.getElementById("wallet").value.trim();
       const amount = parseFloat(document.getElementById("amount").value);
       const totalBalance = user.balance + refEarn;
 
-      if (wallet.length < 10 || isNaN(amount)) {
-        document.getElementById("withdrawStatus").innerText = "❌ Invalid wallet or amount!";
+      if (!wallet || wallet.length < 10) {
+        withdrawStatusP.style.color = "red";
+        withdrawStatusP.innerText = "❌ Invalid wallet number!";
         return;
       }
-      if (amount < 30 || amount > totalBalance) {
-        document.getElementById("withdrawStatus").innerText = "❌ Minimum Rs. 30 or Insufficient!";
+      if (isNaN(amount) || amount < 30 || amount > totalBalance) {
+        withdrawStatusP.style.color = "red";
+        withdrawStatusP.innerText = "❌ Invalid amount!";
         return;
       }
 
+      // Deduct amount first from balance, then from referral earnings if needed
       if (user.balance >= amount) {
         user.balance -= amount;
       } else {
@@ -254,28 +358,44 @@
         refEarn -= diff;
       }
 
-      db.ref("withdrawRequests").push({
+      // Save withdraw request
+      const withdrawRef = db.ref("withdrawRequests").push();
+      withdrawRef.set({
         userId: userId,
         username: tgUser.username || tgUser.first_name,
-        method,
-        wallet,
-        amount,
+        method: method,
+        wallet: wallet,
+        amount: amount,
         status: "pending",
         timestamp: Date.now()
       });
 
       updateBalances();
-      document.getElementById("withdrawStatus").innerText = `✅ Rs. ${amount} requested to ${wallet}`;
+      withdrawStatusP.style.color = "lightgreen";
+      withdrawStatusP.innerText = `✅ Rs. ${amount} requested to ${wallet}`;
+      // Clear input
+      document.getElementById("wallet").value = "";
+      document.getElementById("amount").value = "";
     }
 
-    // Admin Panel Button
+    // Close webview for blocked user
+    function closeWebview() {
+      Telegram.WebApp.close();
+    }
+
+    // Admin button show only for specific admin ID
     const adminId = 7313389640;
     if (tgUser.id === adminId) {
       const adminBtn = document.createElement("button");
       adminBtn.id = "adminBtn";
-      adminBtn.innerHTML = "<span>Admin Panel</span>";
-      adminBtn.onclick = () => window.location.href = "admin.html";
+      adminBtn.title = "Admin Panel";
+      adminBtn.innerHTML = "🤴";
+      adminBtn.onclick = () => {
+        window.location.href = "admin.html";
+      };
       document.body.appendChild(adminBtn);
     }
-  </script></body>
+  </script>
+
+</body>
 </html>
