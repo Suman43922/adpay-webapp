@@ -1,0 +1,99 @@
+<!DOCTYPE html><html>
+<head>
+  <title>Admin Logs - AdPay</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: white;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #00cec9;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #555;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #222;
+    }
+    tr:nth-child(even) {
+      background-color: #1e1e1e;
+    }
+    #backBtn {
+      margin-top: 20px;
+      background-color: #0984e3;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      color: white;
+      border: none;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  </style>
+</head>
+<body>
+  <h2>📊 Admin Logs</h2>  <table>
+    <thead>
+      <tr>
+        <th>Admin ID</th>
+        <th>User ID</th>
+        <th>Action</th>
+        <th>Amount</th>
+        <th>Time</th>
+      </tr>
+    </thead>
+    <tbody id="logsTable"></tbody>
+  </table><button id="backBtn" onclick="goBack()">⬅️ Back</button>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCSm5ieUET95VXEA69JtViX9su5ClMUrCU",
+      authDomain: "adpayrewards-5d60d.firebaseapp.com",
+      databaseURL: "https://adpayrewards-5d60d-default-rtdb.firebaseio.com",
+      projectId: "adpayrewards-5d60d",
+      storageBucket: "adpayrewards-5d60d.appspot.com",
+      messagingSenderId: "45534721620",
+      appId: "1:45534721620:web:75757cda1537e3c7f35fc1"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const logsTable = document.getElementById("logsTable");
+
+    db.ref("adminLogs").once("value").then(snapshot => {
+      snapshot.forEach(child => {
+        const log = child.val();
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${log.adminId}</td>
+          <td>${log.targetUserId}</td>
+          <td>${log.action}</td>
+          <td>Rs. ${parseFloat(log.amount).toFixed(2)}</td>
+          <td>${new Date(log.timestamp).toLocaleString()}</td>
+        `;
+        logsTable.appendChild(row);
+      });
+    });
+
+    function goBack() {
+      window.history.back();
+    }
+  </script></body>
+</html>
