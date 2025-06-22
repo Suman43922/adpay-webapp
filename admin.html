@@ -119,15 +119,18 @@
         return;
       }
       const ref = db.ref("users/" + uid);
-      ref.once("value").then(snap => {
-        if (!snap.exists()) return document.getElementById("balMsg").innerText = "❌ User not found";
-        let d = snap.val();
-        d.balance = parseFloat(d.balance || 0);
-        d.balance = act === "add" ? d.balance + amt : Math.max(0, d.balance - amt);
-        ref.update({ balance: d.balance });
-        document.getElementById("balMsg").innerText = `✅ Balance updated: Rs. ${d.balance.toFixed(2)}`;
-      });
-    }
+ref.on("value", snap => {
+  if (!snap.exists()) {
+    document.getElementById("userInfo").innerText = "❌ User not found!";
+    return;
+  }
+  const data = snap.val();
+  document.getElementById("userInfo").innerText =
+    `👤 Username: ${data.username || "N/A"}\n` +
+    `💰 Balance: Rs. ${parseFloat(data.balance || 0).toFixed(2)}\n` +
+    `📺 Ads Watched: ${data.adsWatched || 0}\n` +
+    `👥 Referrals: ${data.referrals || 0}`;
+});
 
     function getUserInfo() {
       const uid = document.getElementById("infoUser").value.trim();
