@@ -222,48 +222,50 @@
   }
 
   function startAd() {
-    if (views >= maxViews) {
-      alert("📛 Daily limit reached!");
-      return;
-    }
+  if (views >= maxViews) {
+    alert("📛 Daily limit reached!");
+    return;
+  }
 
-    window.open("https://otieu.com/4/9471398", "_blank");
+  window.open("https://otieu.com/4/9471398", "_blank");
 
-    let timeLeft = 15;
-    const timerDiv = document.createElement("div");
-    timerDiv.id = "timer";
+  let timeLeft = 15;
+  const timerDiv = document.createElement("div");
+  timerDiv.id = "timer";
+  timerDiv.innerText = `⏳ Wait: ${timeLeft--} sec`;
+  document.body.appendChild(timerDiv);
+
+  const claimBtn = document.createElement("button");
+  claimBtn.innerText = "🎁 Claim Reward";
+  claimBtn.id = "claimBtn";
+  claimBtn.style.display = "none";
+
+  // ✅ Claim button lai Watch Ad button ko tala rak्ने
+  document.getElementById("watchBtn").insertAdjacentElement("afterend", claimBtn);
+
+  const interval = setInterval(() => {
     timerDiv.innerText = `⏳ Wait: ${timeLeft--} sec`;
-    document.body.appendChild(timerDiv);
+    if (timeLeft < 0) {
+      clearInterval(interval);
+      timerDiv.innerText = "";
+      claimBtn.style.display = "block";
+    }
+  }, 1000);
 
-    const claimBtn = document.createElement("button");
-    claimBtn.innerText = "🎁 Claim Reward";
-    claimBtn.id = "claimBtn";
-    claimBtn.style.display = "none";
-    document.body.appendChild(claimBtn);
+  claimBtn.onclick = () => {
+    views++;
+    user.balance += rewardPerView;
+    userRef.update({
+      adsWatched: views,
+      balance: user.balance
+    });
 
-    const interval = setInterval(() => {
-      timerDiv.innerText = `⏳ Wait: ${timeLeft--} sec`;
-      if (timeLeft < 0) {
-        clearInterval(interval);
-        timerDiv.innerText = "";
-        claimBtn.style.display = "block";
-      }
-    }, 1000);
-
-    claimBtn.onclick = () => {
-      views++;
-      user.balance += rewardPerView;
-      userRef.update({
-        adsWatched: views,
-        balance: user.balance
-      });
-
-      document.getElementById("counter").innerText = `📛 Daily Limit = ${views}`;
-      updateBalances();
-      alert("🎉 Reward Claimed!");
-      claimBtn.remove();
-      timerDiv.remove();
-    };
+    document.getElementById("counter").innerText = `📛 Daily Limit = ${views}`;
+    updateBalances();
+    alert("🎉 Reward Claimed!");
+    claimBtn.remove();
+    timerDiv.remove();
+  };
   }
 
   function updateBalances() {
