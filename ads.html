@@ -329,46 +329,26 @@
   }
 
   // Admin Panel Show
-  // 1. Ringing animation define गर्ने
-const style = document.createElement("style");
-style.innerHTML = `
-@keyframes ring {
-  0% { transform: rotate(0); }
-  10% { transform: rotate(15deg); }
-  20% { transform: rotate(-10deg); }
-  30% { transform: rotate(10deg); }
-  40% { transform: rotate(-5deg); }
-  50% { transform: rotate(5deg); }
-  60% { transform: rotate(0); }
-  100% { transform: rotate(0); }
-}
-`;
-document.head.appendChild(style);
-
-// 2. Admin ID check गरेर Button देखाउने
 const adminId = 7313389640;
-if (tgUser && tgUser.id === adminId) {
-  const adminBtn = document.createElement("button");  // ⬅️ Button बनाइयो
-
-  adminBtn.innerHTML = "🔔 <span style='animation: ring 1s infinite;'>Admin Panel</span>";  // ⬅️ यो लाइन यहीँ राख्ने
-
-  adminBtn.style = `
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    padding: 12px 20px;
-    background: #ff0000;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 16px;
-    z-index: 9999;
-  `;
-  adminBtn.onclick = () => {
-    window.location.href = "admin.html";
-  };
-  document.body.appendChild(adminBtn);
-}
+  if (tgUser && tgUser.id === adminId) {
+    const adminBtn = document.createElement("button");
+    adminBtn.innerText = "👑 Admin Panel";
+    adminBtn.style = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      background: #ff1493;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      z-index: 9999;
+    `;
+    adminBtn.onclick = () => {
+      window.location.href = "admin.html";
+    };
+    document.body.appendChild(adminBtn);
   }
 </script>
 </body>
