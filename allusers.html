@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>All Users - AdPay</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: white;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+    }
+    #userList {
+      max-height: 500px;
+      overflow-y: auto;
+      background-color: #1e1e1e;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+    li {
+      margin: 6px 0;
+      font-size: 15px;
+    }
+    button {
+      background-color: #0984e3;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin-top: 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>🧑‍💻 All Registered Users</h2>
+
+  <div id="userList">Loading...</div>
+
+  <div style="text-align:center;">
+    <button onclick="goBack()">⬅️ Back</button>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCSm5ieUET95VXEA69JtViX9su5ClMUrCU",
+      authDomain: "adpayrewards-5d60d.firebaseapp.com",
+      databaseURL: "https://adpayrewards-5d60d-default-rtdb.firebaseio.com",
+      projectId: "adpayrewards-5d60d",
+      storageBucket: "adpayrewards-5d60d.appspot.com",
+      messagingSenderId: "45534721620",
+      appId: "1:45534721620:web:75757cda1537e3c7f35fc1"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function loadUsers() {
+      const userListDiv = document.getElementById("userList");
+      db.ref("users").once("value").then(snapshot => {
+        let html = "<ul>";
+        snapshot.forEach(child => {
+          const uid = child.key;
+          const data = child.val();
+          html += `<li><b>${uid}</b> — @${data.username || "No username"}</li>`;
+        });
+        html += "</ul>";
+        userListDiv.innerHTML = html;
+      });
+    }
+
+    function goBack() {
+      window.location.href = "admin.html";
+    }
+
+    window.onload = loadUsers;
+  </script>
+</body>
+</html>
