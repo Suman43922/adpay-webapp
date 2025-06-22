@@ -161,28 +161,28 @@
     }
 
     function deleteUser() {
-      const uid = document.getElementById("infoUser").value.trim();
-      if (!uid) {
-        document.getElementById("userActionMsg").innerText = "❌ Enter User ID first";
-        return;
-      }
-      const userRef = db.ref("users/" + uid);
+  const uid = document.getElementById("infoUser").value.trim();
+  if (!uid) {
+    document.getElementById("userActionMsg").innerText = "❌ Enter User ID first";
+    return;
+  }
+  const userRef = db.ref("users/" + uid);
 
-      userRef.once("value").then(snap => {
-        if (!snap.exists()) {
-          document.getElementById("userActionMsg").innerText = "❌ User not found!";
-          return;
-        }
-        const userData = snap.val();
-
-        // Move to deletedUsers
-        db.ref("deletedUsers/" + uid).set(userData).then(() => {
-          userRef.remove().then(() => {
-            document.getElementById("userActionMsg").innerText = "✅ User deleted!";
-          });
-        });
-      });
+  userRef.once("value").then(snap => {
+    if (!snap.exists()) {
+      document.getElementById("userActionMsg").innerText = "❌ User not found!";
+      return;
     }
+    const userData = snap.val();
+    userData.deletedAt = Date.now(); // Add deleted time
+
+    db.ref("deletedUsers/" + uid).set(userData).then(() => {
+      userRef.remove().then(() => {
+        document.getElementById("userActionMsg").innerText = "✅ User deleted!";
+      });
+    });
+  });
+}
 
     function restoreUser() {
       const uid = document.getElementById("infoUser").value.trim();
@@ -209,28 +209,15 @@
     }
 
     function viewDeletedUsers() {
-      const deletedUsersRef = db.ref("deletedUsers");
-      deletedUsersRef.once("value").then(snapshot => {
-        if (!snapshot.exists()) {
-          alert("No deleted users found!");
-          return;
-        }
-        let users = "";
-        snapshot.forEach(child => {
-          const user = child.val();
-          users += `UserID: ${child.key}, Username: ${user.username || "N/A"}\n`;
-        });
-        alert("Deleted Users:\n" + users);
-      });
+  window.location.href = "delete.html";
     }
-
     function copyRef() {
       const uid = document.getElementById("infoUser").value.trim();
       if (!uid) {
         document.getElementById("userActionMsg").innerText = "❌ Enter User ID first";
         return;
       }
-      const refLink = `https://t.me/AdsclicksBot?start=${uid}`;
+      const refLink = `https://t.me/AdpayrewardsBot?start=${uid}`;
       navigator.clipboard.writeText(refLink).then(() => {
         document.getElementById("userActionMsg").innerText = "✅ Referral link copied!";
       });
