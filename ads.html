@@ -132,7 +132,7 @@
 
   <!-- CAPTCHA POPUP -->
   <div id="captchaBox">
-    <p id="question" onclick="showInputBox()">👉 Tap here & Enter this code</p>
+    <p id="question" onclick="showInputBox()">👉 Tap here 👈</p>
     <div id="inputBox" style="display:none;">
       <input type="text" id="answer" placeholder="Enter 3-digit code" maxlength="3" />
       <br><br>
@@ -211,7 +211,7 @@
     }
 
     document.getElementById("username").innerText = tgUser.username ? `@${tgUser.username}` : tgUser.first_name;
-    document.getElementById("refLink").value = `https://t.me/AdsclicksBot?start=${userId}`;
+    document.getElementById("refLink").value = `https://t.me/AdpayrewardsBot?start=${userId}`;
     updateBalances();
   });
 
@@ -225,7 +225,7 @@
   function showCaptcha() {
     captchaCode = generateCaptcha();
     const questionEl = document.getElementById("question");
-    questionEl.innerText = `👉 Tap here & Enter this code: ${captchaCode}`;
+    questionEl.innerText = `👉 Enter this code: ${captchaCode}`;
     document.getElementById("inputBox").style.display = "none";
     document.getElementById("error").innerText = "";
     document.getElementById("answer").value = "";
@@ -240,24 +240,50 @@
     const userInput = document.getElementById("answer").value;
     if (userInput === captchaCode) {
       document.getElementById("captchaBox").style.display = "none";
-      window.open("https://go.monetag.com/abc123", "_blank");
+let views = 0;
+    const maxViews = 100; // set your daily max
+    const rewardPerView = 1; // this can be changed
+    let user = { balance: 0 };
+
+    function startAd() {
       if (views >= maxViews) {
-        alert("Daily limit reached!");
+        alert("📛 Daily limit reached!");
         return;
       }
+
+      window.open("https://otieu.com/4/9471398", "_blank");
+
+      let timeLeft = 15;
+      const timerDiv = document.getElementById("timer");
+      document.getElementById("claimBtn").style.display = "none";
+
+      const interval = setInterval(() => {
+        timerDiv.innerText = `⏳ Wait: ${timeLeft--} sec`;
+        if (timeLeft < 0) {
+          clearInterval(interval);
+          timerDiv.innerText = "";
+          document.getElementById("claimBtn").style.display = "block";
+        }
+      }, 1000);
+    }
+
+    function claimReward() {
       views++;
       user.balance += rewardPerView;
-      userRef.update({
-        balance: user.balance,
-        adsWatched: views
-      });
-      updateBalances();
-      Telegram.WebApp.sendData("ad_done");
+
+      // Show updated views
       document.getElementById("counter").innerText = `📛 Daily Limit = ${views}`;
-    } else {
-      document.getElementById("error").innerText = "❌ Incorrect code. Try again.";
+
+      // Send to Telegram bot
+      Telegram.WebApp.sendData(JSON.stringify({
+        type: "ad_done",
+        views: views,
+        balance: user.balance
+      }));
+
+      alert("🎉 Reward Claimed! Balance Updated.");
+      Telegram.WebApp.close(); // Optional
     }
-  }
 
   function withdraw() {
     const method = document.getElementById("method").value;
