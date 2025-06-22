@@ -1,6 +1,7 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
-  <title>Admin Logs - AdPay</title>
+  <title>User Logs - AdPay</title>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -14,52 +15,46 @@
     }
     h2 {
       text-align: center;
-      color: #00cec9;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    th, td {
-      border: 1px solid #555;
-      padding: 10px;
-      text-align: center;
-    }
-    th {
-      background-color: #222;
-    }
-    tr:nth-child(even) {
+    #logList {
+      max-height: 500px;
+      overflow-y: auto;
       background-color: #1e1e1e;
-    }
-    #backBtn {
-      margin-top: 20px;
-      background-color: #0984e3;
-      padding: 10px 20px;
+      padding: 15px;
       border-radius: 10px;
-      cursor: pointer;
-      font-size: 16px;
+      margin-top: 20px;
+    }
+    .log-entry {
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #444;
+    }
+    .log-entry h3 {
+      margin: 0 0 8px 0;
+    }
+    .action-line {
+      font-size: 14px;
+      margin-left: 10px;
+    }
+    button {
+      background-color: #0984e3;
       color: white;
       border: none;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
+      padding: 10px 20px;
+      margin-top: 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <h2>📊 Admin Logs</h2>  <table>
-    <thead>
-      <tr>
-        <th>Admin ID</th>
-        <th>User ID</th>
-        <th>Action</th>
-        <th>Amount</th>
-        <th>Time</th>
-      </tr>
-    </thead>
-    <tbody id="logsTable"></tbody>
-  </table><button id="backBtn" onclick="goBack()">⬅️ Back</button>
+  <h2>📜 User Transaction Logs</h2>
+  <div id="logList">Loading logs...</div>
+
+  <div style="text-align:center;">
+    <button onclick="goBack()">⬅️ Back</button>
+  </div>
 
   <script>
     const firebaseConfig = {
@@ -75,25 +70,48 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const logsTable = document.getElementById("logsTable");
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleString("en-GB"); // You can change format here
+    }
 
-    db.ref("adminLogs").once("value").then(snapshot => {
-      snapshot.forEach(child => {
-        const log = child.val();
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${log.adminId}</td>
-          <td>${log.targetUserId}</td>
-          <td>${log.action}</td>
-          <td>Rs. ${parseFloat(log.amount).toFixed(2)}</td>
-          <td>${new Date(log.timestamp).toLocaleString()}</td>
-        `;
-        logsTable.appendChild(row);
+    function loadLogs() {
+      const logListDiv = document.getElementById("logList");
+
+      db.ref("logs").once("value").then(snapshot => {
+        if (!snapshot.exists()) {
+          logListDiv.innerHTML = "No logs found.";
+          return;
+        }
+
+        let html = "";
+        snapshot.forEach(userSnap => {
+          const userId = userSnap.key;
+          const logs = userSnap.val();
+
+          html += `<div class="log-entry"><h3>👤 UID: ${userId}</h3>`;
+
+          for (const logId in logs) {
+            const log = logs[logId];
+            const action = log.action?.toUpperCase() || "UNKNOWN";
+            const amount = log.amount ?? 0;
+            const time = log.time ? formatTime(log.time) : "Unknown time";
+
+            html += `<div class="action-line">📌 <b>${action}</b> Rs. ${amount} at 🕒 ${time}</div>`;
+          }
+
+          html += "</div>";
+        });
+
+        logListDiv.innerHTML = html;
       });
-    });
+    }
 
     function goBack() {
-      window.history.back();
+      window.location.href = "admin.html";
     }
-  </script></body>
+
+    window.onload = loadLogs;
+  </script>
+</body>
 </html>
