@@ -1,4 +1,5 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
   <title>Admin Panel - AdPay</title>
   <meta charset="UTF-8" />
@@ -45,12 +46,12 @@
     .error { color: red; }
   </style>
 </head>
-<button onclick="window.location.href='ads.html'">Dashboard</button>
 <body>
   <h2>👑 Admin Dashboard</h2>
   <p id="accessStatus">Checking access...</p>
+
   <div id="adminPanel" style="display: none;">
-    
+
     <div class="card">
       <h3>🧾 Balance Control</h3>
       <input type="text" id="targetUser" placeholder="User ID" />
@@ -68,31 +69,23 @@
       <input type="text" id="infoUser" placeholder="User ID to Fetch Info" />
       <button onclick="getUserInfo()">📄 Get Info</button>
       <p id="userInfo" style="font-size: 14px; white-space: pre-line;"></p>
-      
       <button onclick="deleteUser()">🗑️ Delete User</button>
       <button onclick="restoreUser()">♻️ Restore User</button>
-      <button onclick="viewDeletedUsers()">
-        📋 View Deleted Users
-      </button>
-
+      <button onclick="viewDeletedUsers()">📋 View Deleted Users</button>
       <p id="userActionMsg" class="success"></p>
     </div>
 
+    <!-- ✅ Centered More Panel Here -->
     <div class="card">
-      <h3>👥 Total Users</h3>
-      <button onclick="getTotalUsers()">🔢 Count Users</button>
-      <p id="userCount"></p>
+      <h3>⚙️ More Settings</h3>
+      <button onclick="getTotalUsers()">🔢 Total Users</button>
+      <p id="userCount">Total Users: ...</p>
+      <button onclick="window.location.href='request.html'">📄 Withdraw Requests</button>
+      <button onclick="window.location.href='logs.html'">📜 Admin Logs</button>
+<button onclick="window.location.href='allusers.html'">🧑‍💻 All Users</button>
     </div>
 
-    <div class="card">
-  <h3>📥 Withdraw Requests</h3>
-  <button onclick="window.location.href='request.html'">📄 View Requests</button>
-</div>
-
-<div class="card">
-  <h3>🧾 Admin Logs</h3>
-  <button onclick="window.location.href='logs.html'">📜 View Admin Logs</button>
-</div>
+  </div>
 
   <script>
     const adminIds = [7313389640];
@@ -105,13 +98,10 @@
       messagingSenderId: "45534721620",
       appId: "1:45534721620:web:75757cda1537e3c7f35fc1"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
     Telegram.WebApp.ready();
     Telegram.WebApp.expand();
-
     const tgUser = Telegram.WebApp.initDataUnsafe.user;
     const userId = tgUser.id;
 
@@ -163,28 +153,26 @@
     }
 
     function deleteUser() {
-  const uid = document.getElementById("infoUser").value.trim();
-  if (!uid) {
-    document.getElementById("userActionMsg").innerText = "❌ Enter User ID first";
-    return;
-  }
-  const userRef = db.ref("users/" + uid);
-
-  userRef.once("value").then(snap => {
-    if (!snap.exists()) {
-      document.getElementById("userActionMsg").innerText = "❌ User not found!";
-      return;
-    }
-    const userData = snap.val();
-    userData.deletedAt = Date.now(); // Add deleted time
-
-    db.ref("deletedUsers/" + uid).set(userData).then(() => {
-      userRef.remove().then(() => {
-        document.getElementById("userActionMsg").innerText = "✅ User deleted!";
+      const uid = document.getElementById("infoUser").value.trim();
+      if (!uid) {
+        document.getElementById("userActionMsg").innerText = "❌ Enter User ID first";
+        return;
+      }
+      const userRef = db.ref("users/" + uid);
+      userRef.once("value").then(snap => {
+        if (!snap.exists()) {
+          document.getElementById("userActionMsg").innerText = "❌ User not found!";
+          return;
+        }
+        const userData = snap.val();
+        userData.deletedAt = Date.now();
+        db.ref("deletedUsers/" + uid).set(userData).then(() => {
+          userRef.remove().then(() => {
+            document.getElementById("userActionMsg").innerText = "✅ User deleted!";
+          });
+        });
       });
-    });
-  });
-}
+    }
 
     function restoreUser() {
       const uid = document.getElementById("infoUser").value.trim();
@@ -194,14 +182,12 @@
       }
       const deletedRef = db.ref("deletedUsers/" + uid);
       const userRef = db.ref("users/" + uid);
-
       deletedRef.once("value").then(snap => {
         if (!snap.exists()) {
           document.getElementById("userActionMsg").innerText = "❌ No deleted user found!";
           return;
         }
         const userData = snap.val();
-
         userRef.set(userData).then(() => {
           deletedRef.remove().then(() => {
             document.getElementById("userActionMsg").innerText = "✅ User restored!";
@@ -211,23 +197,12 @@
     }
 
     function viewDeletedUsers() {
-  window.location.href = "delete.html";
-    }
-    function copyRef() {
-      const uid = document.getElementById("infoUser").value.trim();
-      if (!uid) {
-        document.getElementById("userActionMsg").innerText = "❌ Enter User ID first";
-        return;
-      }
-      const refLink = `https://t.me/AdpayrewardsBot?start=${uid}`;
-      navigator.clipboard.writeText(refLink).then(() => {
-        document.getElementById("userActionMsg").innerText = "✅ Referral link copied!";
-      });
+      window.location.href = "delete.html";
     }
 
     function getTotalUsers() {
-      db.ref("users").once("value").then(snap => {
-        document.getElementById("userCount").innerText = `Total Users: ${snap.numChildren()}`;
+      db.ref("users").once("value").then(snapshot => {
+        document.getElementById("userCount").innerText = `Total Users: ${snapshot.numChildren()}`;
       });
     }
   </script>
