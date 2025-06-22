@@ -177,18 +177,17 @@
   }
 
   function showCaptcha() {
-    captchaCode = generateCaptcha();
-    document.getElementById("question").innerText = `👉 Enter this code: ${captchaCode}`;
-    document.getElementById("inputBox").style.display = "none";
-    document.getElementById("error").innerText = "";
-    document.getElementById("answer").value = "";
-    document.getElementById("captchaBox").style.display = "block";
+  captchaCode = generateCaptcha();
+  document.getElementById("question").innerText = "👉 Tap here 👈";
+  document.getElementById("inputBox").style.display = "none";
+  document.getElementById("error").innerText = "";
+  document.getElementById("answer").value = "";
+  document.getElementById("captchaBox").style.display = "block";
   }
-
   function showInputBox() {
-    document.getElementById("inputBox").style.display = "block";
-  }
-
+  document.getElementById("question").innerText = `👉 Enter this code: ${captchaCode}`;
+  document.getElementById("inputBox").style.display = "block";
+}
   function verifyCaptcha() {
     const userInput = document.getElementById("answer").value;
     if (userInput === captchaCode) {
@@ -309,10 +308,18 @@
   if (tgUser && tgUser.id === adminId) {
     const adminBtn = document.createElement("button");
     adminBtn.innerText = "👑 Admin Panel";
-    adminBtn.className = "blueBtn";
-    adminBtn.style.position = "fixed";
-    adminBtn.style.bottom = "20px";
-    adminBtn.style.right = "20px";
+    adminBtn.style = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      background: #ff1493;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      z-index: 9999;
+    `;
     adminBtn.onclick = () => {
       window.location.href = "admin.html";
     };
