@@ -125,8 +125,6 @@
     <input type="number" id="amount" placeholder="Enter amount to withdraw"/>
     <button onclick="withdraw()">💵 Request Withdraw</button>
     <p id="withdrawStatus" style="color: lightgreen;"></p>
-
-    <!-- 📜 Withdraw History Button -->
     <button onclick="toggleHistory()" class="blueBtn">📜 View Withdraw History</button>
   </div>
 
@@ -148,6 +146,7 @@
 
   let views = 0, referrals = 0, refEarn = 0;
   let user = { balance: 0 };
+  let captchaCode = "";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCSm5ieUET95VXEA69JtViX9su5ClMUrCU",
@@ -170,62 +169,16 @@
   const userId = tgUser.id;
   const userRef = db.ref("users/" + userId);
 
-  let captchaCode = "";
+  document.getElementById("username").innerText = tgUser.username ? `@${tgUser.username}` : tgUser.first_name;
+  document.getElementById("refLink").value = `https://t.me/AdpayrewardsBot?start=${userId}`;
 
   function generateCaptcha() {
     return Math.floor(100 + Math.random() * 900).toString();
   }
 
-  // Load user data
-  userRef.once("value").then(snap => {
-    if (!snap.exists()) {
-      userRef.set({
-        username: tgUser.username || tgUser.first_name,
-        balance: 0,
-        adsWatched: 0,
-        referrals: 0,
-        referralEarning: 0,
-        referredBy: referralId || null
-      });
-
-      if (referralId) {
-        const refRef = db.ref("users/" + referralId);
-        refRef.once("value").then(refSnap => {
-          if (refSnap.exists()) {
-            let refData = refSnap.val();
-            refRef.update({
-              referralEarning: (refData.referralEarning || 0) + rewardPerReferral,
-              referrals: (refData.referrals || 0) + 1
-            });
-          }
-        });
-      }
-    } else {
-      let data = snap.val();
-      user.balance = data.balance || 0;
-      views = data.adsWatched || 0;
-      refEarn = data.referralEarning || 0;
-      referrals = data.referrals || 0;
-      document.getElementById("counter").innerText = `📛 Daily Limit = ${views}`;
-      document.getElementById("totalRefs").innerText = referrals;
-    }
-
-    document.getElementById("username").innerText = tgUser.username ? `@${tgUser.username}` : tgUser.first_name;
-    document.getElementById("refLink").value = `https://t.me/AdpayrewardsBot?start=${userId}`;
-    updateBalances();
-  });
-
-  function updateBalances() {
-    const total = user.balance + refEarn;
-    document.getElementById("balance").innerText = `Rs. ${user.balance.toFixed(2)}`;
-    document.getElementById("refEarnings").innerText = `Rs. ${refEarn.toFixed(2)}`;
-    document.getElementById("withdrawBalance").innerText = `Rs. ${total.toFixed(2)}`;
-  }
-
   function showCaptcha() {
     captchaCode = generateCaptcha();
-    const questionEl = document.getElementById("question");
-    questionEl.innerText = `👉 Enter this code: ${captchaCode}`;
+    document.getElementById("question").innerText = `👉 Enter this code: ${captchaCode}`;
     document.getElementById("inputBox").style.display = "none";
     document.getElementById("error").innerText = "";
     document.getElementById("answer").value = "";
@@ -240,50 +193,63 @@
     const userInput = document.getElementById("answer").value;
     if (userInput === captchaCode) {
       document.getElementById("captchaBox").style.display = "none";
-let views = 0;
-    const maxViews = 100; // set your daily max
-    const rewardPerView = 1; // this can be changed
-    let user = { balance: 0 };
+      startAd();
+    } else {
+      document.getElementById("error").innerText = "❌ Wrong code! Try again.";
+    }
+  }
 
-    function startAd() {
-      if (views >= maxViews) {
-        alert("📛 Daily limit reached!");
-        return;
-      }
-
-      window.open("https://otieu.com/4/9471398", "_blank");
-
-      let timeLeft = 15;
-      const timerDiv = document.getElementById("timer");
-      document.getElementById("claimBtn").style.display = "none";
-
-      const interval = setInterval(() => {
-        timerDiv.innerText = `⏳ Wait: ${timeLeft--} sec`;
-        if (timeLeft < 0) {
-          clearInterval(interval);
-          timerDiv.innerText = "";
-          document.getElementById("claimBtn").style.display = "block";
-        }
-      }, 1000);
+  function startAd() {
+    if (views >= maxViews) {
+      alert("📛 Daily limit reached!");
+      return;
     }
 
-    function claimReward() {
+    window.open("https://otieu.com/4/9471398", "_blank");
+
+    let timeLeft = 15;
+    const timerDiv = document.createElement("div");
+    timerDiv.id = "timer";
+    timerDiv.innerText = `⏳ Wait: ${timeLeft--} sec`;
+    document.body.appendChild(timerDiv);
+
+    const claimBtn = document.createElement("button");
+    claimBtn.innerText = "🎁 Claim Reward";
+    claimBtn.id = "claimBtn";
+    claimBtn.style.display = "none";
+    document.body.appendChild(claimBtn);
+
+    const interval = setInterval(() => {
+      timerDiv.innerText = `⏳ Wait: ${timeLeft--} sec`;
+      if (timeLeft < 0) {
+        clearInterval(interval);
+        timerDiv.innerText = "";
+        claimBtn.style.display = "block";
+      }
+    }, 1000);
+
+    claimBtn.onclick = () => {
       views++;
       user.balance += rewardPerView;
-
-      // Show updated views
-      document.getElementById("counter").innerText = `📛 Daily Limit = ${views}`;
-
-      // Send to Telegram bot
-      Telegram.WebApp.sendData(JSON.stringify({
-        type: "ad_done",
-        views: views,
+      userRef.update({
+        adsWatched: views,
         balance: user.balance
-      }));
+      });
 
-      alert("🎉 Reward Claimed! Balance Updated.");
-      Telegram.WebApp.close(); // Optional
-    }
+      document.getElementById("counter").innerText = `📛 Daily Limit = ${views}`;
+      updateBalances();
+      alert("🎉 Reward Claimed!");
+      claimBtn.remove();
+      timerDiv.remove();
+    };
+  }
+
+  function updateBalances() {
+    const total = user.balance + refEarn;
+    document.getElementById("balance").innerText = `Rs. ${user.balance.toFixed(2)}`;
+    document.getElementById("refEarnings").innerText = `Rs. ${refEarn.toFixed(2)}`;
+    document.getElementById("withdrawBalance").innerText = `Rs. ${total.toFixed(2)}`;
+  }
 
   function withdraw() {
     const method = document.getElementById("method").value;
@@ -321,7 +287,6 @@ let views = 0;
 
     updateBalances();
     document.getElementById("withdrawStatus").innerText = `✅ Rs. ${amount} requested to ${wallet}`;
-    Telegram.WebApp.sendData(`withdraw|${method}|${wallet}|${amount}`);
   }
 
   function copyReferral() {
@@ -339,23 +304,15 @@ let views = 0;
     window.location.href = "history.html";
   }
 
-  // 👑 Admin Panel Button
+  // Admin Panel Show
   const adminId = 7313389640;
   if (tgUser && tgUser.id === adminId) {
     const adminBtn = document.createElement("button");
     adminBtn.innerText = "👑 Admin Panel";
-    adminBtn.style = `
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      padding: 12px 20px;
-      background: #ff1493;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-      z-index: 9999;
-    `;
+    adminBtn.className = "blueBtn";
+    adminBtn.style.position = "fixed";
+    adminBtn.style.bottom = "20px";
+    adminBtn.style.right = "20px";
     adminBtn.onclick = () => {
       window.location.href = "admin.html";
     };
